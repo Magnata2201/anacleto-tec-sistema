@@ -85,15 +85,8 @@
         .fab { position: fixed; bottom: 20px; right: 20px; width: 56px; height: 56px; background: var(--secondary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; border: none; cursor: pointer; box-shadow: 0 5px 15px rgba(255, 115, 0, 0.4); z-index: 500; transition: 0.3s; }
         .fab:hover { transform: scale(1.1); }
 
-        /* Caixa de Informações (Resolvendo Tarja Preta) */
+        /* Caixa de Informações */
         .info-box { background: #1e293b; padding: 15px; border-radius: 6px; margin-bottom: 20px; font-size: 13px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; }
-
-        /* Estilo para PDF e Impressão */
-        .pdf-mode { background: white !important; color: black !important; padding: 20px !important; width: 100% !important; }
-        .pdf-mode * { color: black !important; }
-        .pdf-mode .info-box { background: #f1f5f9 !important; border: 1px solid #cbd5e1 !important; }
-        .pdf-mode .os-table th { background: #e2e8f0 !important; color: black !important; }
-        .pdf-mode .os-table td, .pdf-mode .os-table { border-color: #cbd5e1 !important; }
 
         @media (max-width: 768px) {
             aside { position: fixed; left: -100%; height: 100%; }
@@ -103,10 +96,11 @@
             .sidebar-overlay.show { display: block; }
         }
 
+        /* Estilo de impressão direta (Crtl+P) */
         @media print {
             aside, .fab, header, .modal-overlay, .btn-menu { display: none !important; }
-            body { background: white !important; color: black !important; }
-            .os-view-container { border: none !important; width: 100% !important; padding: 0 !important; }
+            body { background: white !important; color: black !important; display: block;}
+            .os-view-container { border: none !important; width: 100% !important; padding: 0 !important; margin: 0 !important; max-width: none !important;}
             .info-box { background: #f1f5f9 !important; border: 1px solid #ccc !important; }
             * { color: black !important; }
         }
@@ -167,12 +161,10 @@
     </div>
 
     <script type="module">
-        // PROTEÇÃO: Impede acesso forçado (via botão Avançar) sem login
         if (sessionStorage.getItem("auth") !== "true") {
             window.location.replace("index.html");
         }
 
-        // Função para Sair e limpar sessão
         window.logout = () => {
             sessionStorage.removeItem("auth");
             window.location.replace("index.html");
@@ -197,13 +189,13 @@
         let osDraft = { cliente: null, fornecedor: 'ANACLETO TEC', itens: [], total: 0, desconto: 0 };
         let currentOSId = null;
         let currentOSData = null;
-        let allOsDocs = []; // Array Global para segurar as OS carregadas para o filtro
-
-        const paths = { 'Clientes': 'clientes', 'Fornecedores': 'fornecedores', 'Produtos': 'produtos', 'Serviços': 'servicos', 'Ordens de Serviços': 'ordens_servicos', 'Usuários': 'usuarios', 'Estoque': 'estoques' };
+        let allOsDocs = [];
 
         window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sb-overlay').classList.toggle('show'); };
         window.closeModal = () => document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none');
         window.toggleSub = (id) => document.getElementById(id).classList.toggle('show');
+
+        const paths = { 'Clientes': 'clientes', 'Fornecedores': 'fornecedores', 'Produtos': 'produtos', 'Serviços': 'servicos', 'Ordens de Serviços': 'ordens_servicos', 'Usuários': 'usuarios', 'Estoque': 'estoques' };
 
         window.setPage = (name) => {
             currentPg = name; document.getElementById('title').innerText = name;
@@ -218,7 +210,6 @@
                 const content = document.getElementById('main-content'); 
                 content.innerHTML = "";
                 
-                // SISTEMA DE FILTRO E EXCLUSÃO NA LISTA DE OS
                 if (name === 'Ordens de Serviços') {
                     content.innerHTML = `
                         <div style="display:flex; gap:10px; margin-bottom:15px; background:var(--card-bg); padding:15px; border-radius:8px; border:1px solid var(--border-color); flex-wrap:wrap;">
@@ -248,7 +239,6 @@
             });
         };
 
-        // Renderiza e re-renderiza a lista de OS filtradas
         window.renderOSList = (docs) => {
             const container = document.getElementById('os-list-container');
             if(!container) return;
@@ -265,7 +255,6 @@
                 card.onclick = () => viewOSDetail(data.id);
                 const totalList = (data.total || 0).toFixed(2);
                 
-                // Card de listagem contendo Checkbox de Pagamento e Lixeira
                 card.innerHTML = `
                     <div class="os-badge">${data.numero}</div>
                     <div class="os-details"><b>${data.cliente}</b><span>${data.dataSimples} - R$ ${totalList}</span></div>
@@ -281,30 +270,24 @@
             });
         };
 
-        // Lógica de filtro (Nome e Data)
         window.filterOS = () => {
             const cliFilter = document.getElementById('filter-cli').value.toLowerCase();
             const dateRaw = document.getElementById('filter-data').value;
             let dateFilter = '';
-            
             if (dateRaw) {
-                // Converte Data do input YYYY-MM-DD para DD/MM/YYYY
                 const [y, m, d] = dateRaw.split('-');
                 dateFilter = `${d}/${m}/${y}`;
             }
-            
             const filtered = allOsDocs.filter(os => {
                 const matchCli = (os.cliente || '').toLowerCase().includes(cliFilter);
                 const matchDate = dateFilter ? os.dataSimples === dateFilter : true;
                 return matchCli && matchDate;
             });
-            
             window.renderOSList(filtered);
         };
 
         window.togglePaidStatus = async (id, status) => { await updateDoc(doc(db, "ordens_servicos", id), { pago: status }); };
 
-        // --- EMPRESA ---
         async function loadConfig() { const d = await getDoc(doc(db, "config", "empresa")); if(d.exists()) configEmpresa = d.data(); }
         loadConfig();
         function renderCompanyForm() {
@@ -313,7 +296,6 @@
         window.previewLogo = (input) => { if (input.files && input.files[0]) { const reader = new FileReader(); reader.onload = (e) => { const img = new Image(); img.onload = () => { const canvas = document.createElement('canvas'); const MAX_WIDTH = 400; const scaleSize = MAX_WIDTH / img.width; canvas.width = MAX_WIDTH; canvas.height = img.height * scaleSize; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, canvas.width, canvas.height); const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7); document.getElementById('logo-preview').src = compressedBase64; }; img.src = e.target.result; }; reader.readAsDataURL(input.files[0]); } };
         window.saveCompany = async () => { const data = { nome: document.getElementById('comp-nome').value, endereco: document.getElementById('comp-end').value, cnpj: document.getElementById('comp-cnpj').value, telefone: document.getElementById('comp-tel').value, site: document.getElementById('comp-site').value, agradecimento: document.getElementById('comp-msg').value, logo: document.getElementById('logo-preview').src, criadoEm: new Date() }; await setDoc(doc(db, "config", "empresa"), data); configEmpresa = data; alert("Salvo!"); };
 
-        // --- ORDENS DE SERVIÇO ---
         window.startNewOS = async (editId = null) => {
             editingId = editId;
             if (editId) {
@@ -376,7 +358,6 @@
             setPage('Ordens de Serviços'); 
         };
 
-        // --- VISUALIZAÇÃO E PDF ---
         async function viewOSDetail(id) {
             currentOSId = id;
             const d = await getDoc(doc(db, "ordens_servicos", id));
@@ -387,7 +368,7 @@
                 <button onclick="window.startNewOS('${id}')" style="background:#f59e0b;color:white;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;"><i class="fa-solid fa-pen"></i></button>
                 <button onclick="window.openSignaturePad()" style="background:#10b981;color:white;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;"><i class="fa-solid fa-signature"></i></button>
                 <button onclick="window.sharePDF()" style="background:#00a2ff;color:white;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;"><i class="fa-solid fa-share-nodes"></i></button>
-                <button onclick="window.downloadPDF()" style="background:var(--secondary);color:white;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;"><i class="fa-solid fa-download"></i></button>
+                <button id="btn-down-pdf" onclick="window.downloadPDF()" style="background:var(--secondary);color:white;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;"><i class="fa-solid fa-download"></i></button>
                 <button onclick="window.print()" style="background:#64748b;color:white;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;"><i class="fa-solid fa-print"></i></button>
                 <button onclick="setPage('Ordens de Serviços')" style="background:none;border:none;color:var(--text-muted);font-size:24px;cursor:pointer;">&times;</button>
             `;
@@ -416,28 +397,99 @@
             </div>`;
         }
 
+
+        /* ======================================================================================
+           RESOLUÇÃO FINAL DO PDF: GERA UMA PÁGINA VIRTUAL COM LARGURA EXATA (MÉTODO LIMPO E 100% SEGURO)
+           ====================================================================================== */
         async function processPDF(action) {
+            const btn = document.getElementById('btn-down-pdf');
+            if(btn) { btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; btn.disabled = true; }
+
             const element = document.getElementById('os-print-area');
-            element.classList.add('pdf-mode');
-            const opt = { margin: 10, filename: `OS_${currentOSData.numero}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
-            if (action === 'download') { await html2pdf().set(opt).from(element).save(); element.classList.remove('pdf-mode'); }
-            else { const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob'); element.classList.remove('pdf-mode'); const file = new File([pdfBlob], opt.filename, { type: 'application/pdf' }); if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: 'OS', text: 'Segue a OS' }); } else { window.downloadPDF(); } }
+
+            // Aqui nós montamos um mini-site invisível e isolado só para tirar a foto
+            // Fixamos a largura do body em 760px. Isso resolve a matemática para as margens encaixarem perfeito!
+            const printContent = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <style>
+                        :root { 
+                            --primary: #00a2ff; 
+                            --secondary: #ff7300; 
+                            --border-color: #cbd5e1;
+                        }
+                        body { 
+                            font-family: 'Segoe UI', sans-serif; 
+                            background: white; 
+                            margin: 0; 
+                            padding: 0; 
+                            width: 760px; /* Largura cravada para não ser afetada pelo seu monitor */
+                        }
+                        .pdf-container { 
+                            width: 100%; 
+                            padding: 20px; 
+                            box-sizing: border-box; 
+                            background: white; 
+                        }
+                        .info-box { background: #f1f5f9; padding: 15px; border-radius: 6px; margin-bottom: 20px; font-size: 13px; border: 1px solid #cbd5e1; display: flex; justify-content: space-between; }
+                        .os-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+                        .os-table th { background: #e2e8f0; text-align: left; padding: 10px; border: 1px solid #cbd5e1; font-size: 11px; text-transform: uppercase; }
+                        .os-table td { padding: 10px; border: 1px solid #cbd5e1; font-size: 12px; }
+                        * { color: black !important; }
+                    </style>
+                </head>
+                <body>
+                    <div class="pdf-container">
+                        ${element.innerHTML}
+                    </div>
+                </body>
+                </html>
+            `;
+
+            // Configuração do gerador: Margem de 12mm é o segredo para os 760px de largura encaixarem sem cortar
+            const opt = { 
+                margin: 12, 
+                filename: `OS_${currentOSData.numero}.pdf`, 
+                image: { type: 'jpeg', quality: 1 }, 
+                html2canvas: { scale: 2, useCORS: true }, 
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } 
+            };
+
+            try {
+                // A biblioteca pega nosso código virtual, gera a foto perfeitamente dimensionada e cria o PDF
+                if (action === 'download') { 
+                    await html2pdf().set(opt).from(printContent).save(); 
+                } else { 
+                    const pdfBlob = await html2pdf().set(opt).from(printContent).outputPdf('blob'); 
+                    const file = new File([pdfBlob], opt.filename, { type: 'application/pdf' }); 
+                    if (navigator.canShare && navigator.canShare({ files: [file] })) { 
+                        await navigator.share({ files: [file], title: 'OS', text: 'Segue a OS' }); 
+                    } else { 
+                        await html2pdf().set(opt).from(printContent).save(); 
+                    } 
+                }
+            } catch (error) {
+                console.error("Erro na geração do PDF:", error);
+                alert("Falha ao gerar o arquivo PDF.");
+            } finally {
+                // Devolve a vida ao botão de baixar
+                if(btn) { btn.innerHTML = '<i class="fa-solid fa-download"></i>'; btn.disabled = false; }
+            }
         }
+        
         window.downloadPDF = () => processPDF('download');
         window.sharePDF = () => processPDF('share');
 
-        // --- ASSINATURA ---
-        let canvas, ctx, drawing = false;
         window.openSignaturePad = () => { document.getElementById('modal-signature').style.display = 'flex'; canvas = document.getElementById('sig-canvas'); ctx = canvas.getContext('2d'); ctx.lineWidth = 2; ctx.strokeStyle = "#000"; const getPos = (e) => { const rect = canvas.getBoundingClientRect(); return { x: (e.clientX || e.touches[0].clientX) - rect.left, y: (e.clientY || e.touches[0].clientY) - rect.top }; }; const start = (e) => { drawing = true; const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); }; const move = (e) => { if(!drawing) return; const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); }; const stop = () => { drawing = false; ctx.closePath(); }; canvas.onmousedown = start; canvas.onmousemove = move; canvas.onmouseup = stop; canvas.ontouchstart = start; canvas.ontouchmove = move; canvas.ontouchend = stop; };
         window.clearSignature = () => ctx.clearRect(0, 0, canvas.width, canvas.height);
         window.saveSignature = async () => { const base64 = canvas.toDataURL('image/png'); await updateDoc(doc(db, "ordens_servicos", currentOSId), { assinatura: base64 }); closeModal(); viewOSDetail(currentOSId); };
 
         window.handleFab = () => { if(currentPg === 'Ordens de Serviços') window.startNewOS(); else window.openGenericModal(); };
         window.openGenericModal = (data = null, id = null) => { editingId = id; const isC = ['Clientes', 'Fornecedores'].includes(currentPg); document.getElementById('modal-generic').style.display = 'flex'; document.getElementById('modal-body-content').innerHTML = isC ? `<div class="form-group"><label>Nome</label><input type="text" id="g-nome" value="${data?.nome || ''}"></div><div class="form-group"><label>Telefone</label><input type="text" id="g-tel" value="${data?.telefone || ''}"></div><div class="form-group"><label>Endereço</label><textarea id="g-end">${data?.endereco || ''}</textarea></div><button onclick="saveGeneric()" style="width:100%;padding:14px;background:var(--primary);color:white;border:none;border-radius:4px;margin-top:15px;font-weight:bold;">SALVAR</button>` : `<div class="form-group"><label>Descrição</label><input type="text" id="g-nome" value="${data?.nome || ''}"></div><div class="form-group"><label>Valor Unit.</label><input type="number" id="g-val" value="${data?.valor || ''}"></div><button onclick="saveGeneric()" style="width:100%;padding:14px;background:var(--primary);color:white;border:none;border-radius:4px;margin-top:15px;font-weight:bold;">SALVAR</button>`; };
-        window.saveGeneric = async () => { const data = { nome: document.getElementById('g-nome').value, criadoEm: new Date() }; if(['Clientes', 'Fornecedores'].includes(currentPg)) { data.telefone = document.getElementById('g-tel').value; data.endereco = document.getElementById('g-end').value; } else { data.valor = parseFloat(document.getElementById('g-val').value || 0); data.descricao = data.nome; } if(editingId) await updateDoc(doc(db, paths[currentPg], editingId), data); else await addDoc(collection(db, paths[currentPg]), data); closeModal(); };
+        window.saveGeneric = async () => { const data = { document.getElementById('g-nome').value, criadoEm: new Date() }; if(['Clientes', 'Fornecedores'].includes(currentPg)) { data.telefone = document.getElementById('g-tel').value; data.endereco = document.getElementById('g-end').value; } else { data.valor = parseFloat(document.getElementById('g-val').value || 0); data.descricao = data.nome; } if(editingId) await updateDoc(doc(db, paths[currentPg], editingId), data); else await addDoc(collection(db, paths[currentPg]), data); closeModal(); };
         window.editGeneric = async (col, id) => { const d = await getDoc(doc(db, col, id)); window.openGenericModal(d.data(), id); };
         
-        // Excluir OS ou qualquer outro Documento Genérico
         window.deleteDocGeneric = async (col, id) => { 
             if(confirm("Tem certeza que deseja excluir? Esta ação não pode ser desfeita.")) {
                 await deleteDoc(doc(db, col, id)); 
