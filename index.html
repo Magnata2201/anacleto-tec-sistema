@@ -3,62 +3,176 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Anacleto Tec</title>
+    <title>Sistema Anacleto Tec - Gestão Profissional</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="icon" type="image/png" href="logo03.png">
     <link rel="apple-touch-icon" href="logo03.png">
-    <link href="https://fonts.googleapis.com/css2..." rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        body { margin: 0; padding: 0; font-family: 'Roboto', sans-serif; background-color: #0b0e14; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; color: #e2e8f0; }
-        .login-container { background-color: #161d2b; padding: 40px; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); width: 100%; max-width: 450px; text-align: center; box-sizing: border-box; border-top: 4px solid #00a2ff; border-bottom: 4px solid #ff7300; }
-        .logo-img { width: 220px; height: auto; margin-bottom: 20px; }
-        h2 { color: #e2e8f0; font-weight: 700; margin-bottom: 30px; margin-top: 0; text-transform: uppercase; letter-spacing: 1px; }
-        .input-group { margin-bottom: 20px; }
-        input { width: 100%; padding: 14px; border: 1px solid #2d3748; border-radius: 4px; background-color: #0b0e14; font-size: 14px; outline: none; box-sizing: border-box; color: #e2e8f0; transition: border-color 0.3s; }
-        input:focus { border-color: #00a2ff; }
-        .forgot-password { display: block; text-align: left; color: #00a2ff; text-decoration: none; font-size: 13px; font-weight: bold; margin: 15px 0; }
-        .btn-login { width: 100%; padding: 14px; background: linear-gradient(90deg, #ff7300, #e65c00); color: white; border: none; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(255, 115, 0, 0.3); margin-bottom: 20px; text-transform: uppercase; transition: transform 0.2s, box-shadow 0.2s; }
-        .btn-login:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(255, 115, 0, 0.4); }
-        .signup-text { font-size: 14px; color: #94a3b8; }
-        .signup-text a { color: #00a2ff; text-decoration: none; font-weight: bold; }
-        .footer-support { margin-top: 30px; text-align: center; color: #94a3b8; font-size: 14px; line-height: 1.6; }
-        .footer-support p { margin: 5px 0; }
-        .footer-link { text-decoration: none; color: #e2e8f0; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 5px; transition: color 0.3s; }
-        .footer-link:hover { color: #00a2ff; }
-        .whatsapp-icon { color: #25D366; font-size: 18px; }
+        :root { 
+            --primary: #00a2ff; 
+            --secondary: #ff7300; 
+            --bg-light: #0b0e14; 
+            --card-bg: #161d2b; 
+            --sidebar-w: 260px;
+            --text-dark: #e2e8f0; 
+            --text-muted: #94a3b8;
+            --border-color: #2d3748;
+        }
+
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; display: flex; height: 100vh; background: var(--bg-light); color: var(--text-dark); overflow: hidden; }
+
+        /* --- Sidebar --- */
+        aside { width: var(--sidebar-w); background: var(--card-bg); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; z-index: 1000; transition: all 0.3s ease; }
+        .user-header { background: #080a0f; color: white; padding: 20px 15px; text-align: center; border-bottom: 2px solid var(--primary); }
+        .user-header img { max-width: 150px; height: auto; }
+        nav { flex: 1; padding: 15px 0; overflow-y: auto; }
+        .nav-section-title { font-size: 10px; text-transform: uppercase; color: var(--text-muted); padding: 15px 25px 5px; font-weight: bold; }
+        .nav-link { display: flex; align-items: center; padding: 12px 25px; text-decoration: none; color: var(--text-dark); font-size: 14px; cursor: pointer; transition: 0.2s; border-left: 4px solid transparent; }
+        .nav-link i:first-child { width: 30px; color: var(--primary); font-size: 16px; }
+        .nav-link:hover, .nav-link.active { background: #1e293b; color: var(--primary); border-left-color: var(--primary); }
+        .submenu { background: #0b0e14; display: none; }
+        .submenu.show { display: block; }
+        .sub-link { display: flex; align-items: center; padding: 10px 20px 10px 55px; font-size: 13px; text-decoration: none; color: var(--text-muted); cursor: pointer; transition: color 0.2s; }
+        .sub-link:hover { color: var(--primary); }
+
+        /* --- Main Area --- */
+        main { flex: 1; display: flex; flex-direction: column; position: relative; overflow: hidden; width: 100%; }
+        header { background: var(--card-bg); height: 60px; display: flex; align-items: center; padding: 0 15px; border-bottom: 1px solid var(--border-color); justify-content: space-between; gap: 10px; }
+        header h2 { font-size: 16px; color: var(--primary); margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-transform: uppercase;}
+        .btn-menu { display: none; background: none; border: none; font-size: 20px; color: var(--primary); cursor: pointer; }
+        .content { flex: 1; overflow-y: auto; padding: 15px; }
+
+        /* --- Listagem --- */
+        .os-card { background: var(--card-bg); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 10px; cursor: pointer; display: flex; align-items: center; transition: 0.3s; }
+        .os-card:hover { border-color: var(--primary); background: #1e293b;}
+        .os-badge { background: var(--primary); color: #fff; padding: 4px 8px; border-radius: 4px; font-weight: bold; margin-right: 10px; font-size: 11px; }
+        .os-details { flex: 1; min-width: 0; }
+        .os-details b { font-size: 13px; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #fff; }
+        .os-details span { color: var(--text-muted); font-size: 11px; display: block; margin-top: 2px;}
+
+        .paid-check-area { display: flex; flex-direction: column; align-items: center; gap: 2px; margin-left: 10px; padding-left: 10px; border-left: 1px solid var(--border-color); }
+        .paid-check-area input { width: 18px; height: 18px; cursor: pointer; accent-color: var(--secondary); }
+        .paid-check-area label { font-size: 8px; font-weight: bold; color: var(--text-muted); }
+
+        /* --- Modais --- */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 10px; box-sizing: border-box; }
+        .modal-box { background: var(--card-bg); border-radius: 10px; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.8); border: 1px solid var(--border-color); }
+        .modal-header { background: #080a0f; color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; border-bottom: 2px solid var(--primary); }
+        .modal-body { padding: 15px; }
+
+        /* --- Formulários & Grids --- */
+        .form-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
+        .os-builder-top { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .btn-action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+        .form-group { display: flex; flex-direction: column; margin-bottom: 10px; }
+        .form-group label { font-size: 12px; margin-bottom: 5px; color: var(--text-muted); font-weight: bold; }
+        .form-group input, .form-group textarea { padding: 10px; background: var(--bg-light); border: 1px solid var(--border-color); color: var(--text-dark); border-radius: 4px; font-family: inherit; box-sizing: border-box; width: 100%; outline: none; }
+        .form-group input:focus, .form-group textarea:focus { border-color: var(--primary); }
+
+        @media (min-width: 768px) {
+            .form-grid { grid-template-columns: 1fr 1fr; }
+            .btn-action-grid { grid-template-columns: 1fr 1fr 1fr 1fr; }
+            header h2 { font-size: 18px; }
+        }
+
+        .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .os-table { width: 100%; border-collapse: collapse; min-width: 100%; margin-top: 10px; }
+        .os-table th { background: #1e293b; color: #fff; text-align: left; padding: 10px; border: 1px solid var(--border-color); font-size: 11px; text-transform: uppercase; }
+        .os-table td { padding: 10px; border: 1px solid var(--border-color); font-size: 12px; vertical-align: middle; color: var(--text-dark); }
+
+        .fab { position: fixed; bottom: 20px; right: 20px; width: 56px; height: 56px; background: var(--secondary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; border: none; cursor: pointer; box-shadow: 0 5px 15px rgba(255, 115, 0, 0.4); z-index: 500; transition: 0.3s; }
+        .fab:hover { transform: scale(1.1); }
+
+        /* Caixa de Informações */
+        .info-box { background: #1e293b; padding: 15px; border-radius: 6px; margin-bottom: 20px; font-size: 13px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; }
+
+        @media (max-width: 768px) {
+            aside { position: fixed; left: -100%; height: 100%; }
+            aside.open { left: 0; }
+            .btn-menu { display: block; }
+            .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 900; }
+            .sidebar-overlay.show { display: block; }
+        }
+
+        /* Estilo de impressão direta (Crtl+P) */
+        @media print {
+            aside, .fab, header, .modal-overlay, .btn-menu { display: none !important; }
+            body { background: white !important; color: black !important; display: block;}
+            .os-view-container { border: none !important; width: 100% !important; padding: 0 !important; margin: 0 !important; max-width: none !important;}
+            .info-box { background: #f1f5f9 !important; border: 1px solid #ccc !important; }
+            * { color: black !important; }
+        }
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <img src="logo03.png" alt="Anacleto Tec" class="logo-img">
-        <h2>Acesso ao Sistema</h2>
-        <div class="input-group">
-            <input type="text" id="username" placeholder="Usuário" autocomplete="off">
-        </div>
-        <div class="input-group">
-            <input type="password" id="password" placeholder="Senha" autocomplete="off">
-        </div>
-        <a href="#" class="forgot-password">Use suas credenciais de acesso</a>
-        <button class="btn-login" id="loginBtn">ENTRAR</button>
-        <p class="signup-text">Não tem uma conta? <a href="#">Solicite nos canais abaixo</a></p>
-    </div>
 
-    <div class="footer-support">
-        <p>Precisa de ajuda? Contate nosso suporte</p>
-        <a href="#" class="footer-link">
-            <i class="fa-brands fa-whatsapp whatsapp-icon"></i> Suporte Técnico
-        </a>
+    <div class="sidebar-overlay" id="sb-overlay" onclick="window.toggleSidebar()"></div>
+    <aside id="sidebar">
+        <div class="user-header">
+            <img src="logo03.png" alt="Anacleto Tec">
+        </div>
+        <nav>
+            <div class="nav-section-title">Administração</div>
+            <a class="nav-link" onclick="setPage('Financeiro')"><i class="fa-solid fa-chart-line"></i> Financeiro</a>
+            <a class="nav-link" onclick="setPage('Empresa')"><i class="fa-solid fa-building"></i> Minha Empresa</a>
+            <a class="nav-link" onclick="setPage('Usuários')"><i class="fa-solid fa-user-gear"></i> Usuários</a>
+            <div class="nav-section-title">Operacional</div>
+            <a class="nav-link" onclick="setPage('Estoque')"><i class="fa-solid fa-boxes-stacked"></i> Estoque</a>
+            <a class="nav-link" onclick="setPage('Recibos')"><i class="fa-solid fa-file-invoice"></i> Recibos</a>
+            <a class="nav-link active" id="link-os" onclick="setPage('Ordens de Serviços')"><i class="fa-solid fa-briefcase"></i> Ordens de Serviço</a>
+            <div class="nav-link" onclick="toggleSub('sub-prod')"><i class="fa-solid fa-box"></i> Itens <i class="fa-solid fa-chevron-down" style="margin-left:auto"></i></div>
+            <div class="submenu" id="sub-prod"><a class="sub-link" onclick="setPage('Produtos')">Produtos</a><a class="sub-link" onclick="setPage('Serviços')">Serviços</a></div>
+            <div class="nav-link" onclick="toggleSub('sub-cli')"><i class="fa-solid fa-users"></i> Contatos <i class="fa-solid fa-chevron-down" style="margin-left:auto"></i></div>
+            <div class="submenu" id="sub-cli"><a class="sub-link" onclick="setPage('Clientes')">Clientes</a><a class="sub-link" onclick="setPage('Fornecedores')">Fornecedores</a></div>
+            <div style="margin-top:20px; padding: 0 25px;">
+                <button onclick="logout()" style="width:100%; background:#ef4444; color:white; border:none; padding:10px; border-radius:4px; font-weight:bold; cursor:pointer;"><i class="fa-solid fa-power-off"></i> SAIR</button>
+            </div>
+        </nav>
+    </aside>
+
+    <main>
+        <header>
+            <button class="btn-menu" onclick="window.toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
+            <h2 id="title">Ordens de Serviço</h2>
+            <div id="header-btns" style="display:flex; align-items:center; gap:5px;"></div>
+        </header>
+        <div class="content" id="main-content"></div>
+        <button class="fab" onclick="handleFab()"><i class="fa-solid fa-plus"></i></button>
+    </main>
+
+    <div class="modal-overlay" id="modal-generic"><div class="modal-box"><div class="modal-header"><h3 id="modal-title" style="margin:0;">Cadastro</h3><button onclick="closeModal()" style="background:none;border:none;color:white;font-size:24px;cursor:pointer;">&times;</button></div><div class="modal-body" id="modal-body-content"></div></div></div>
+    <div class="modal-overlay" id="modal-search"><div class="modal-box"><div class="modal-header"><h3 style="margin:0;">Selecionar</h3><button onclick="closeModal()" style="background:none;border:none;color:white;font-size:24px;cursor:pointer;">&times;</button></div><div style="padding:10px;"><input type="text" id="m-input" placeholder="Pesquisar..." style="width:100%; padding:12px; border:1px solid var(--border-color); border-radius:6px; background:var(--bg-light); color:#fff; box-sizing: border-box; outline:none;"></div><div id="m-list" style="max-height:60vh; overflow-y:auto; padding: 0 10px 10px 10px;"></div></div></div>
+    <div class="modal-overlay" id="modal-qty"><div class="modal-box"><div class="modal-header"><h3 style="margin:0;">Ajustar Item</h3><button onclick="closeModal()" style="background:none;border:none;color:white;font-size:24px;cursor:pointer;">&times;</button></div><div class="modal-body"><h4 id="q-nome-item" style="color:var(--primary); margin:0 0 15px 0"></h4><div class="form-group"><label>Quantidade</label><input type="number" id="q-val" value="1" min="1"></div><div class="form-group"><label>Preço Unitário (R$)</label><input type="number" id="p-val" step="0.01"></div><button onclick="confirmItem()" style="width:100%; background:var(--secondary); color:white; border:none; padding:15px; font-weight:bold; border-radius:4px; margin-top:10px; cursor: pointer;">ADICIONAR</button></div></div></div>
+    <div class="modal-overlay" id="modal-discount"><div class="modal-box"><div class="modal-header"><h3 style="margin:0;">Aplicar Desconto</h3><button onclick="closeModal()" style="background:none;border:none;color:white;font-size:24px;cursor:pointer;">&times;</button></div><div class="modal-body"><div class="form-group"><label>Valor (R$)</label><input type="number" id="d-val" step="0.01" value="0"></div><button onclick="applyDiscount()" style="width:100%; background:var(--primary); color:white; border:none; padding:15px; font-weight:bold; border-radius:4px; cursor: pointer;">APLICAR</button></div></div></div>
+    <div class="modal-overlay" id="modal-work"><div class="modal-box"><div class="modal-header"><h3 style="margin:0;">Trabalho Avulso</h3><button onclick="closeModal()" style="background:none;border:none;color:white;font-size:24px;cursor:pointer;">&times;</button></div><div class="modal-body"><div class="form-group"><label>Descrição</label><input type="text" id="w-desc"></div><div class="form-group"><label>Valor (R$)</label><input type="number" id="w-val" step="0.01"></div><button onclick="addManualWork()" style="width:100%; background:var(--secondary); color:white; border:none; padding:15px; font-weight:bold; border-radius:4px; cursor: pointer;">ADICIONAR</button></div></div></div>
+    
+    <div class="modal-overlay" id="modal-signature">
+        <div class="modal-box">
+            <div class="modal-header"><h3 style="margin:0;">Coletar Assinatura</h3><button onclick="closeModal()" style="background:none;border:none;color:white;font-size:24px;cursor:pointer;">&times;</button></div>
+            <div class="modal-body" style="text-align:center;">
+                <canvas id="sig-canvas" width="400" height="200" style="border:2px dashed var(--primary); background: #fff; border-radius: 4px; touch-action: none; max-width: 100%;"></canvas>
+                <div style="display:flex; gap:10px; margin-top:15px;">
+                    <button onclick="window.clearSignature()" style="flex:1; padding:12px; background:#ef4444; color:white; border:none; border-radius:4px; font-weight:bold;">LIMPAR</button>
+                    <button onclick="window.saveSignature()" style="flex:2; padding:12px; background:var(--secondary); color:white; border:none; border-radius:4px; font-weight:bold;">SALVAR</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-        // Verifica se já está logado, se sim, bloqueia a tela de login
-        if(sessionStorage.getItem("auth") === "true") {
-            window.location.replace("sistema.html");
+        if (sessionStorage.getItem("auth") !== "true") {
+            window.location.replace("index.html");
         }
+
+        window.logout = () => {
+            sessionStorage.removeItem("auth");
+            window.location.replace("index.html");
+        };
+
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, getDocs, doc, getDoc, updateDoc, deleteDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyB5g7W8l01WSQvq_Fahx32PiJfs-50LzNM",
@@ -69,41 +183,436 @@
             messagingSenderId: "652594939672",
             appId: "1:652594939672:web:4876c14dc7d943f382406d"
         };
-
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        const loginBtn = document.getElementById('loginBtn');
-        const userInp = document.getElementById('username');
-        const passInp = document.getElementById('password');
+        let currentPg = "Ordens de Serviços", unsub = null, tempItem = null, editingId = null, configEmpresa = {};
+        let osDraft = { cliente: null, fornecedor: 'ANACLETO TEC', itens: [], total: 0, desconto: 0 };
+        let currentOSId = null;
+        let currentOSData = null;
+        let allOsDocs = [];
 
-        async function handleLogin() {
-            const user = userInp.value;
-            const pass = passInp.value;
+        window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sb-overlay').classList.toggle('show'); };
+        window.closeModal = () => document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none');
+        window.toggleSub = (id) => document.getElementById(id).classList.toggle('show');
 
-            if (user === "admin" && pass === "1996") {
-                sessionStorage.setItem("auth", "true"); // Cria a sessão
-                window.location.replace("sistema.html"); // Substitui a url para bloquear o botão voltar
+        const paths = { 
+    'Clientes': 'clientes', 
+    'Fornecedores': 'fornecedores', 
+    'Produtos': 'produtos', 
+    'Serviços': 'servicos', 
+    'Ordens de Serviços': 'ordens_servicos', 
+    'Usuários': 'usuarios', 
+    'Estoque': 'estoques',
+    'Financeiro': 'despesas' // Nova linha
+};
+        window.setPage = (name) => {
+            if(name === 'Financeiro') {
+    // Dentro do setPage -> if(name === 'Financeiro')
+document.getElementById('header-btns').innerHTML = `<button onclick="openFinanceModal()" style="background:var(--secondary);color:white;border:none;padding:8px 15px;border-radius:6px;cursor:pointer;">+ Nova Despesa</button>`;
+document.getElementById('main-content').innerHTML = `
+    <div style="background:var(--card-bg); padding:20px; border-radius:8px; border:1px solid var(--border-color);">
+        <h3 style="color:var(--primary); text-align:center;">Relatório Detalhado de Fechamento</h3>
+        <div style="display:flex; justify-content:center; gap:10px; margin-bottom:20px;">
+            <input type="month" id="mes-fechamento" style="padding:10px; border-radius:4px; border:1px solid var(--border-color); background:var(--bg-light); color:white;">
+            <button onclick="calcularFinanceiroDetalhado()" style="padding:10px 20px; background:var(--primary); color:white; border:none; border-radius:4px; cursor:pointer;">Gerar Relatório</button>
+        </div>
+        <div id="resultado-financeiro"></div>
+    </div>
+`;
+    return;
+}
+            currentPg = name; document.getElementById('title').innerText = name;
+            document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+            if(window.innerWidth <= 768) window.toggleSidebar();
+            document.getElementById('header-btns').innerHTML = '';
+
+            if(name === 'Empresa') { renderCompanyForm(); return; }
+            if(unsub) unsub();
+
+            unsub = onSnapshot(query(collection(db, paths[name]), orderBy("criadoEm", "desc")), (snap) => {
+                const content = document.getElementById('main-content'); 
+                content.innerHTML = "";
+                
+                if (name === 'Ordens de Serviços') {
+                    content.innerHTML = `
+                        <div style="display:flex; gap:10px; margin-bottom:15px; background:var(--card-bg); padding:15px; border-radius:8px; border:1px solid var(--border-color); flex-wrap:wrap;">
+                            <div style="flex: 1 1 200px;">
+                                <label style="font-size:11px; color:var(--text-muted); display:block; margin-bottom:4px; font-weight:bold;">BUSCAR CLIENTE</label>
+                                <input type="text" id="filter-cli" placeholder="Digite o nome..." style="width:100%; padding:10px; border-radius:4px; border:1px solid var(--border-color); background:var(--bg-light); color:white; outline:none; box-sizing:border-box;" oninput="window.filterOS()">
+                            </div>
+                            <div style="flex: 1 1 150px;">
+                                <label style="font-size:11px; color:var(--text-muted); display:block; margin-bottom:4px; font-weight:bold;">FILTRAR POR DATA</label>
+                                <input type="date" id="filter-data" style="width:100%; padding:10px; border-radius:4px; border:1px solid var(--border-color); background:var(--bg-light); color:white; outline:none; box-sizing:border-box; color-scheme: dark;" onchange="window.filterOS()">
+                            </div>
+                        </div>
+                        <div id="os-list-container"></div>
+                    `;
+                    
+                    allOsDocs = [];
+                    snap.forEach(d => allOsDocs.push({ id: d.id, ...d.data() }));
+                    window.renderOSList(allOsDocs);
+
+                } else {
+                    snap.forEach(d => {
+                        const data = d.data(), card = document.createElement('div'); card.className = 'os-card';
+                        card.innerHTML = `<div class="os-details"><b>${data.nome || data.descricao}</b></div><div style="display:flex;gap:15px"><i class="fa-solid fa-pen" style="color:var(--secondary); cursor:pointer;" onclick="editGeneric('${paths[name]}','${d.id}')"></i><i class="fa-solid fa-trash" style="color:#ef4444; cursor:pointer;" onclick="deleteDocGeneric('${paths[name]}','${d.id}')"></i></div>`;
+                        content.appendChild(card);
+                    });
+                }
+            });
+        };
+
+        window.renderOSList = (docs) => {
+            const container = document.getElementById('os-list-container');
+            if(!container) return;
+            container.innerHTML = '';
+            
+            if(docs.length === 0) {
+                container.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-muted);">Nenhuma Ordem de Serviço encontrada.</div>`;
                 return;
             }
 
-            try {
-                const q = query(collection(db, "usuarios"), where("username", "==", user), where("password", "==", pass));
-                const querySnapshot = await getDocs(q);
-                if (!querySnapshot.empty) {
-                    sessionStorage.setItem("auth", "true"); // Cria a sessão
-                    window.location.replace("sistema.html"); // Substitui a url para bloquear o botão voltar
-                } else {
-                    alert("Usuário ou senha inválidos!");
-                }
-            } catch (error) {
-                console.error("Erro ao logar:", error);
-                alert("Erro na conexão com o banco de dados.");
+            docs.forEach(data => {
+                const card = document.createElement('div'); card.className = 'os-card';
+                const isPaid = data.pago || false; if(isPaid) card.classList.add('paid-os');
+                card.onclick = () => viewOSDetail(data.id);
+                const totalList = (data.total || 0).toFixed(2);
+                
+                card.innerHTML = `
+                    <div class="os-badge">${data.numero}</div>
+                    <div class="os-details"><b>${data.cliente}</b><span>${data.dataSimples} - R$ ${totalList}</span></div>
+                    <div class="paid-check-area" onclick="event.stopPropagation()">
+                        <input type="checkbox" ${isPaid?'checked':''} onchange="window.togglePaidStatus('${data.id}',this.checked)">
+                        <label>${isPaid?'PAGO':'PENDENTE'}</label>
+                    </div>
+                    <div style="margin-left:15px; padding-left:15px; border-left:1px solid var(--border-color); display:flex; align-items:center;" onclick="event.stopPropagation()">
+                        <i class="fa-solid fa-trash" style="color:#ef4444; cursor:pointer; font-size:18px;" onclick="deleteDocGeneric('ordens_servicos', '${data.id}')" title="Excluir OS"></i>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        };
+
+        window.filterOS = () => {
+            const cliFilter = document.getElementById('filter-cli').value.toLowerCase();
+            const dateRaw = document.getElementById('filter-data').value;
+            let dateFilter = '';
+            if (dateRaw) {
+                const [y, m, d] = dateRaw.split('-');
+                dateFilter = `${d}/${m}/${y}`;
             }
+            const filtered = allOsDocs.filter(os => {
+                const matchCli = (os.cliente || '').toLowerCase().includes(cliFilter);
+                const matchDate = dateFilter ? os.dataSimples === dateFilter : true;
+                return matchCli && matchDate;
+            });
+            window.renderOSList(filtered);
+        };
+
+        window.togglePaidStatus = async (id, status) => { await updateDoc(doc(db, "ordens_servicos", id), { pago: status }); };
+
+        async function loadConfig() { const d = await getDoc(doc(db, "config", "empresa")); if(d.exists()) configEmpresa = d.data(); }
+        loadConfig();
+        function renderCompanyForm() {
+            document.getElementById('main-content').innerHTML = `<div style="padding:15px; background:var(--card-bg); border-radius:8px; border: 1px solid var(--border-color);"><div class="form-grid"><div class="form-group full"><label>Logo</label><input type="file" onchange="previewLogo(this)"><img id="logo-preview" src="${configEmpresa.logo || 'logo03.png'}" style="width:120px;margin-top:10px;border-radius:4px;"></div><div class="form-group"><label>Nome</label><input type="text" id="comp-nome" value="${configEmpresa.nome || 'ANACLETO TEC'}"></div><div class="form-group"><label>CNPJ</label><input type="text" id="comp-cnpj" value="${configEmpresa.cnpj || ''}"></div><div class="form-group"><label>Telefone</label><input type="text" id="comp-tel" value="${configEmpresa.telefone || ''}"></div><div class="form-group"><label>Site / Instagram</label><input type="text" id="comp-site" value="${configEmpresa.site || ''}"></div><div class="form-group full"><label>Endereço</label><textarea id="comp-end" rows="2">${configEmpresa.endereco || ''}</textarea></div><div class="form-group full"><label>Agradecimento</label><textarea id="comp-msg" rows="2">${configEmpresa.agradecimento || ''}</textarea></div></div><button style="width:100%;background:var(--primary);color:white;padding:15px;margin-top:15px; border:none; border-radius:6px; font-weight:bold; cursor:pointer;" onclick="saveCompany()">SALVAR</button></div>`;
+        }
+        window.previewLogo = (input) => { if (input.files && input.files[0]) { const reader = new FileReader(); reader.onload = (e) => { const img = new Image(); img.onload = () => { const canvas = document.createElement('canvas'); const MAX_WIDTH = 400; const scaleSize = MAX_WIDTH / img.width; canvas.width = MAX_WIDTH; canvas.height = img.height * scaleSize; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, canvas.width, canvas.height); const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7); document.getElementById('logo-preview').src = compressedBase64; }; img.src = e.target.result; }; reader.readAsDataURL(input.files[0]); } };
+        window.saveCompany = async () => { const data = { nome: document.getElementById('comp-nome').value, endereco: document.getElementById('comp-end').value, cnpj: document.getElementById('comp-cnpj').value, telefone: document.getElementById('comp-tel').value, site: document.getElementById('comp-site').value, agradecimento: document.getElementById('comp-msg').value, logo: document.getElementById('logo-preview').src, criadoEm: new Date() }; await setDoc(doc(db, "config", "empresa"), data); configEmpresa = data; alert("Salvo!"); };
+
+        window.startNewOS = async (editId = null) => {
+            editingId = editId;
+            if (editId) {
+                const d = await getDoc(doc(db, "ordens_servicos", editId));
+                osDraft = d.data();
+            } else {
+                osDraft = { cliente: null, fornecedor: configEmpresa.nome || 'ANACLETO TEC', itens: [], total: 0, desconto: 0 };
+            }
+
+            document.getElementById('header-btns').innerHTML = `<button onclick="saveOS()" style="background:var(--secondary); color:white; border:none; padding:8px 15px; border-radius:6px; font-weight:bold; cursor:pointer;"><i class="fa-solid fa-check"></i> ${editingId?'ATUALIZAR':'SALVAR'}</button>`;
+            document.getElementById('main-content').innerHTML = `
+            <div style="background:var(--card-bg); padding:15px; border-radius:8px; border:1px solid var(--border-color);">
+                <div class="os-builder-top">
+                    <div class="builder-header-btn" onclick="openSearch('fornecedores')" style="border:1px solid var(--border-color); background:var(--bg-light); padding:10px; border-radius:6px; cursor:pointer;">
+                        <span style="font-size:10px;color:var(--text-muted);display:block">FORNECEDOR</span>
+                        <b id="txt-forn" style="color:var(--text-dark);">${osDraft.fornecedor || 'Selecionar...'}</b>
+                    </div>
+                    <div class="builder-header-btn" onclick="openSearch('clientes')" style="border:1px solid var(--border-color); background:var(--bg-light); padding:10px; border-radius:6px; cursor:pointer;">
+                        <span style="font-size:10px;color:var(--text-muted);display:block">CLIENTE</span>
+                        <b id="txt-cli" style="color:var(--text-dark);">${osDraft.cliente || 'Selecionar...'}</b>
+                    </div>
+                </div>
+                <div class="btn-action-grid">
+                    <button onclick="openSearch('produtos')">Produtos</button><button onclick="openSearch('servicos')">Serviços</button><button onclick="window.openWorkModal()">T. Avulso</button><button onclick="window.openDiscountModal()">Desconto</button>
+                </div>
+                <div class="table-responsive"><table class="os-table"><thead><tr><th>Descrição</th><th style="text-align:center">Qtd</th><th style="text-align:right">Total</th><th style="width:30px"></th></tr></thead><tbody id="draft-list"></tbody></table></div>
+                <div style="margin-top:15px; text-align:right; border-top:1px solid var(--border-color); padding-top:15px;">
+                    <div id="d-line" style="display:none; color:var(--secondary); font-weight:bold;">Desconto: - R$ <span id="txt-d">0.00</span></div>
+                    <b style="color:var(--primary); font-size:20px;">TOTAL: R$ <span id="txt-total">0.00</span></b>
+                </div>
+            </div>`;
+            updateDraftUI();
+        };
+
+        function updateDraftUI() {
+            const container = document.getElementById('draft-list'); container.innerHTML = ""; let sum = 0;
+            osDraft.itens.forEach((i, idx) => { sum += i.sub; container.innerHTML += `<tr><td>${i.nome}</td><td style="text-align:center;">${i.qty}</td><td style="text-align:right;">${i.sub.toFixed(2)}</td><td style="text-align:center;"><i class="fa-solid fa-trash" style="color:#ef4444; cursor:pointer;" onclick="removeItem(${idx})"></i></td></tr>`; });
+            osDraft.total = sum - (osDraft.desconto || 0); 
+            document.getElementById('txt-total').innerText = (osDraft.total || 0).toFixed(2);
+            if(osDraft.desconto > 0) { document.getElementById('d-line').style.display = 'block'; document.getElementById('txt-d').innerText = osDraft.desconto.toFixed(2); } else document.getElementById('d-line').style.display = 'none';
         }
 
-        loginBtn.addEventListener('click', handleLogin);
-        document.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleLogin(); });
+        window.removeItem = (idx) => { osDraft.itens.splice(idx, 1); updateDraftUI(); };
+        window.openSearch = async (col) => { const list = document.getElementById('m-list'); document.getElementById('modal-search').style.display = 'flex'; const snap = await getDocs(collection(db, col)); list.innerHTML = ""; snap.forEach(d => { const div = document.createElement('div'); div.className = 'os-card'; div.innerHTML = `<b>${d.data().nome || d.data().descricao}</b>`; div.onclick = () => { if(['produtos','servicos'].includes(col)) { tempItem = d.data(); document.getElementById('q-nome-item').innerText = tempItem.nome || tempItem.descricao; document.getElementById('p-val').value = tempItem.valor || 0; document.getElementById('modal-qty').style.display = 'flex'; document.getElementById('modal-search').style.display = 'none'; } else { if(col === 'clientes') { osDraft.cliente = d.data().nome; document.getElementById('txt-cli').innerText = d.data().nome; } else { osDraft.fornecedor = d.data().nome; document.getElementById('txt-forn').innerText = d.data().nome; } closeModal(); } }; list.appendChild(div); }); };
+        window.confirmItem = () => { const q = parseFloat(document.getElementById('q-val').value); const p = parseFloat(document.getElementById('p-val').value); osDraft.itens.push({ nome: tempItem.nome || tempItem.descricao, qty: q, price: p, sub: q * p }); updateDraftUI(); closeModal(); };
+        window.openDiscountModal = () => document.getElementById('modal-discount').style.display = 'flex';
+        window.openWorkModal = () => document.getElementById('modal-work').style.display = 'flex';
+        window.applyDiscount = () => { osDraft.desconto = parseFloat(document.getElementById('d-val').value || 0); updateDraftUI(); closeModal(); };
+        window.addManualWork = () => { const desc = document.getElementById('w-desc').value, val = parseFloat(document.getElementById('w-val').value || 0); if(!desc || !val) return alert("Preencha!"); osDraft.itens.push({ nome: desc, qty: 1, price: val, sub: val }); updateDraftUI(); closeModal(); };
+
+        window.saveOS = async () => { 
+            if(!osDraft.cliente) return alert("Selecione o cliente!"); 
+            if (editingId) {
+                await updateDoc(doc(db, "ordens_servicos", editingId), { ...osDraft, atualizadoEm: new Date() });
+            } else {
+                const snap = await getDocs(collection(db, "ordens_servicos")); 
+                const num = (snap.size + 1).toString().padStart(4, '0'); 
+                await addDoc(collection(db, "ordens_servicos"), { ...osDraft, numero: num, dataSimples: new Date().toLocaleDateString('pt-BR'), criadoEm: new Date(), pago: false }); 
+            }
+            setPage('Ordens de Serviços'); 
+        };
+
+        async function viewOSDetail(id) {
+            currentOSId = id;
+            const d = await getDoc(doc(db, "ordens_servicos", id));
+            currentOSData = d.data();
+            const data = currentOSData;
+            
+            document.getElementById('header-btns').innerHTML = `
+                <button onclick="window.startNewOS('${id}')" style="background:#f59e0b;color:white;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;"><i class="fa-solid fa-pen"></i></button>
+                <button onclick="window.openSignaturePad()" style="background:#10b981;color:white;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;"><i class="fa-solid fa-signature"></i></button>
+                <button onclick="window.sharePDF()" style="background:#00a2ff;color:white;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;"><i class="fa-solid fa-share-nodes"></i></button>
+                <button id="btn-down-pdf" onclick="window.downloadPDF()" style="background:var(--secondary);color:white;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;"><i class="fa-solid fa-download"></i></button>
+                <button onclick="window.print()" style="background:#64748b;color:white;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;"><i class="fa-solid fa-print"></i></button>
+                <button onclick="setPage('Ordens de Serviços')" style="background:none;border:none;color:var(--text-muted);font-size:24px;cursor:pointer;">&times;</button>
+            `;
+            
+            const head = `<div style="display:flex;justify-content:space-between;border-bottom:2px solid var(--primary);padding-bottom:15px;margin-bottom:20px; align-items:center;">
+                <img src="${configEmpresa.logo || 'logo03.png'}" style="max-width:140px;height:auto;"><div style="text-align:right;font-size:12px;"><b><span style="font-size:16px;">${configEmpresa.nome || 'ANACLETO TEC'}</span></b><br>${configEmpresa.endereco || ''}<br>CNPJ: ${configEmpresa.cnpj || ''} | Tel: ${configEmpresa.telefone || ''}<br>${configEmpresa.site || ''}</div></div>`;
+            
+            const sub = data.itens.reduce((acc, i) => acc + i.sub, 0);
+            const totalFinal = (data.total || 0).toFixed(2);
+            
+            document.getElementById('main-content').innerHTML = `
+            <div class="os-view-container" id="os-print-area" style="background:var(--card-bg);padding:30px;border-radius:8px;border:1px solid var(--border-color); max-width: 800px; margin: 0 auto;">
+                ${head}
+                <div style="margin-bottom:20px;"><b style="color:var(--primary); font-size:18px;">OS Nº: ${data.numero}</b><span style="float:right;"><i class="fa-solid fa-calendar"></i> ${data.dataSimples}</span></div>
+                <div class="info-box">
+                    <div><b>PRESTADOR:</b> ${data.fornecedor || configEmpresa.nome}</div>
+                    <div style="text-align:right;"><b>CLIENTE:</b> ${data.cliente}</div>
+                </div>
+                <div class="table-responsive"><table class="os-table"><thead><tr><th>Descrição</th><th style="text-align:center">Qtd</th><th style="text-align:right">Total</th></tr></thead>
+                <tbody>${data.itens.map(i => `<tr><td>${i.nome}</td><td style="text-align:center">${i.qty}</td><td style="text-align:right">R$ ${i.sub.toFixed(2)}</td></tr>`).join('')}</tbody></table></div>
+                <div style="text-align:right;margin-top:15px;">Subtotal: R$ ${sub.toFixed(2)}</div>
+                ${data.desconto > 0 ? `<div style="text-align:right;color:var(--secondary);">Desconto: - R$ ${data.desconto.toFixed(2)}</div>`:''}
+                <div style="text-align:right;font-weight:bold;font-size:24px;color:var(--primary);margin-top:10px;border-top:1px solid var(--border-color);padding-top:10px;">TOTAL: R$ ${totalFinal}</div>
+                ${data.assinatura ? `<div style="margin-top:40px;text-align:center;"><img src="${data.assinatura}" style="max-width:250px;border-bottom:1px solid #ccc;"><p style="font-size:12px;">Assinatura do Cliente</p></div>` : `<div style="margin-top:60px;text-align:center;"><div style="width:250px;border-top:1px solid #ccc;margin:0 auto;"></div><p style="font-size:12px;">Assinatura do Cliente</p></div>`}
+                <div style="margin-top:40px;text-align:center;font-style:italic;font-size:12px;">${configEmpresa.agradecimento || 'Obrigado pela preferência!'}</div>
+            </div>`;
+        }
+
+        async function processPDF(action) {
+            const btn = document.getElementById('btn-down-pdf');
+            if(btn) { btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; btn.disabled = true; }
+
+            const element = document.getElementById('os-print-area');
+
+            // Salvamos as tags em variáveis para que o Live Server e o VS Code
+            // não leiam isso como código de fechamento real durante a edição.
+            const endHead = "</" + "head>";
+            const endBody = "</" + "body>";
+            const endHtml = "</" + "html>";
+
+            const printContent = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <style>
+                        :root { 
+                            --primary: #00a2ff; 
+                            --secondary: #ff7300; 
+                            --border-color: #cbd5e1;
+                        }
+                        body { 
+                            font-family: 'Segoe UI', sans-serif; 
+                            background: white; 
+                            margin: 0; 
+                            padding: 0; 
+                            width: 760px;
+                        }
+                        .pdf-container { 
+                            width: 100%; 
+                            padding: 20px; 
+                            box-sizing: border-box; 
+                            background: white; 
+                        }
+                        .info-box { background: #f1f5f9; padding: 15px; border-radius: 6px; margin-bottom: 20px; font-size: 13px; border: 1px solid #cbd5e1; display: flex; justify-content: space-between; }
+                        .os-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+                        .os-table th { background: #e2e8f0; text-align: left; padding: 10px; border: 1px solid #cbd5e1; font-size: 11px; text-transform: uppercase; }
+                        .os-table td { padding: 10px; border: 1px solid #cbd5e1; font-size: 12px; }
+                        * { color: black !important; }
+                    </style>
+                ${endHead}
+                <body>
+                    <div class="pdf-container">
+                        ${element.innerHTML}
+                    </div>
+                ${endBody}
+                ${endHtml}
+            `;
+
+            const opt = { 
+                margin: 12, 
+                filename: `OS_${currentOSData.numero}.pdf`, 
+                image: { type: 'jpeg', quality: 1 }, 
+                html2canvas: { scale: 2, useCORS: true }, 
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } 
+            };
+
+            try {
+                if (action === 'download') { 
+                    await html2pdf().set(opt).from(printContent).save(); 
+                } else { 
+                    const pdfBlob = await html2pdf().set(opt).from(printContent).outputPdf('blob'); 
+                    const file = new File([pdfBlob], opt.filename, { type: 'application/pdf' }); 
+                    if (navigator.canShare && navigator.canShare({ files: [file] })) { 
+                        await navigator.share({ files: [file], title: 'OS', text: 'Segue a OS' }); 
+                    } else { 
+                        await html2pdf().set(opt).from(printContent).save(); 
+                    } 
+                }
+            } catch (error) {
+                console.error("Erro na geração do PDF:", error);
+                alert("Falha ao gerar o arquivo PDF.");
+            } finally {
+                if(btn) { btn.innerHTML = '<i class="fa-solid fa-download"></i>'; btn.disabled = false; }
+            }
+        }
+        
+        window.downloadPDF = () => processPDF('download');
+        window.sharePDF = () => processPDF('share');
+
+        window.openSignaturePad = () => { document.getElementById('modal-signature').style.display = 'flex'; canvas = document.getElementById('sig-canvas'); ctx = canvas.getContext('2d'); ctx.lineWidth = 2; ctx.strokeStyle = "#000"; const getPos = (e) => { const rect = canvas.getBoundingClientRect(); return { x: (e.clientX || e.touches[0].clientX) - rect.left, y: (e.clientY || e.touches[0].clientY) - rect.top }; }; const start = (e) => { drawing = true; const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); }; const move = (e) => { if(!drawing) return; const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); }; const stop = () => { drawing = false; ctx.closePath(); }; canvas.onmousedown = start; canvas.onmousemove = move; canvas.onmouseup = stop; canvas.ontouchstart = start; canvas.ontouchmove = move; canvas.ontouchend = stop; };
+        window.clearSignature = () => ctx.clearRect(0, 0, canvas.width, canvas.height);
+        window.saveSignature = async () => { const base64 = canvas.toDataURL('image/png'); await updateDoc(doc(db, "ordens_servicos", currentOSId), { assinatura: base64 }); closeModal(); viewOSDetail(currentOSId); };
+
+        window.handleFab = () => { if(currentPg === 'Ordens de Serviços') window.startNewOS(); else window.openGenericModal(); };
+        window.openGenericModal = (data = null, id = null) => { editingId = id; const isC = ['Clientes', 'Fornecedores'].includes(currentPg); document.getElementById('modal-generic').style.display = 'flex'; document.getElementById('modal-body-content').innerHTML = isC ? `<div class="form-group"><label>Nome</label><input type="text" id="g-nome" value="${data?.nome || ''}"></div><div class="form-group"><label>Telefone</label><input type="text" id="g-tel" value="${data?.telefone || ''}"></div><div class="form-group"><label>Endereço</label><textarea id="g-end">${data?.endereco || ''}</textarea></div><button onclick="saveGeneric()" style="width:100%;padding:14px;background:var(--primary);color:white;border:none;border-radius:4px;margin-top:15px;font-weight:bold;">SALVAR</button>` : `<div class="form-group"><label>Descrição</label><input type="text" id="g-nome" value="${data?.nome || ''}"></div><div class="form-group"><label>Valor Unit.</label><input type="number" id="g-val" value="${data?.valor || ''}"></div><button onclick="saveGeneric()" style="width:100%;padding:14px;background:var(--primary);color:white;border:none;border-radius:4px;margin-top:15px;font-weight:bold;">SALVAR</button>`; };
+        window.saveGeneric = async () => { const data = { nome: document.getElementById('g-nome').value, criadoEm: new Date() }; if(['Clientes', 'Fornecedores'].includes(currentPg)) { data.telefone = document.getElementById('g-tel').value; data.endereco = document.getElementById('g-end').value; } else { data.valor = parseFloat(document.getElementById('g-val').value || 0); data.descricao = data.nome; } if(editingId) await updateDoc(doc(db, paths[currentPg], editingId), data); else await addDoc(collection(db, paths[currentPg]), data); closeModal(); };
+        window.editGeneric = async (col, id) => { const d = await getDoc(doc(db, col, id)); window.openGenericModal(d.data(), id); };
+        
+        window.deleteDocGeneric = async (col, id) => { 
+            if(confirm("Tem certeza que deseja excluir? Esta ação não pode ser desfeita.")) {
+                await deleteDoc(doc(db, col, id)); 
+            }
+        };
+
+        setPage('Ordens de Serviços');
+
+        window.openFinanceModal = () => {
+    document.getElementById('modal-generic').style.display = 'flex';
+    document.getElementById('modal-body-content').innerHTML = `
+        <div class="form-group"><label>Descrição</label><input type="text" id="d-desc"></div>
+        <div class="form-group"><label>Valor (R$)</label><input type="number" id="d-val" step="0.01"></div>
+        <button onclick="salvarDespesa()" style="width:100%;padding:14px;background:var(--secondary);color:white;border:none;border-radius:4px;cursor:pointer;">SALVAR DESPESA</button>
+    `;
+};
+
+window.salvarDespesa = async () => {
+    const desc = document.getElementById('d-desc').value;
+    const val = parseFloat(document.getElementById('d-val').value);
+    await addDoc(collection(db, "despesas"), { descricao: desc, valor: val, data: new Date().toISOString().slice(0,7), criadoEm: new Date() });
+    alert("Despesa salva!");
+    closeModal();
+};
+
+window.calcularFinanceiro = async () => {
+    const mes = document.getElementById('mes-fechamento').value;
+    const osSnap = await getDocs(collection(db, "ordens_servicos"));
+    const despSnap = await getDocs(collection(db, "despesas"));
+    
+    let totalEntradas = 0;
+    osSnap.forEach(doc => {
+        const d = doc.data();
+        if(d.pago && d.dataSimples.includes(mes.split('-').reverse().join('/'))) totalEntradas += d.total;
+    });
+
+    let totalSaidas = 0;
+    despSnap.forEach(doc => {
+        const d = doc.data();
+        if(d.data === mes) totalSaidas += d.valor;
+    });
+
+    document.getElementById('resultado-financeiro').innerHTML = `
+        <p>Entradas: R$ ${totalEntradas.toFixed(2)}</p>
+        <p style="color:#ef4444">Saídas: R$ ${totalSaidas.toFixed(2)}</p>
+        <hr style="border:1px solid var(--border-color)">
+        <p><b>Saldo Final: R$ ${(totalEntradas - totalSaidas).toFixed(2)}</b></p>
+    `;
+};
+
+window.calcularFinanceiroDetalhado = async () => {
+    const mes = document.getElementById('mes-fechamento').value; // Formato YYYY-MM
+    if(!mes) return alert("Selecione o mês!");
+
+    const osSnap = await getDocs(collection(db, "ordens_servicos"));
+    const despSnap = await getDocs(collection(db, "despesas"));
+    
+    let html = `<table class="os-table" style="width:100%; border-collapse:collapse; margin-top:20px;">
+        <thead><tr><th>Cliente</th><th>Item/Serviço</th><th>Qtd</th><th>Valor Unit.</th><th>Subtotal</th></tr></thead><tbody>`;
+    
+    let totalEntradas = 0;
+
+    // Processar OS
+    osSnap.forEach(doc => {
+        const d = doc.data();
+        const dataOS = d.dataSimples.split('/'); // Converte DD/MM/YYYY para comparação
+        const mesOS = `${dataOS[2]}-${dataOS[1]}`;
+
+        if(d.pago && mesOS === mes) {
+            d.itens.forEach(item => {
+                html += `<tr>
+                    <td>${d.cliente}</td>
+                    <td>${item.nome}</td>
+                    <td>${item.qty}</td>
+                    <td>R$ ${item.price.toFixed(2)}</td>
+                    <td>R$ ${item.sub.toFixed(2)}</td>
+                </tr>`;
+                totalEntradas += item.sub;
+            });
+        }
+    });
+
+    html += `</tbody></table><div style="margin-top:20px; padding:15px; background:#1e293b; border-radius:6px;">`;
+    html += `<h4>Resumo Financeiro</h4>`;
+    html += `<p>Total de Entradas: <b>R$ ${totalEntradas.toFixed(2)}</b></p>`;
+
+    // Processar Despesas
+    let totalSaidas = 0;
+    html += `<h4 style="margin-top:15px;">Despesas Lançadas:</h4><ul>`;
+    despSnap.forEach(doc => {
+        const d = doc.data();
+        if(d.data === mes) {
+            html += `<li>${d.descricao}: R$ ${d.valor.toFixed(2)}</li>`;
+            totalSaidas += d.valor;
+        }
+    });
+    html += `</ul>`;
+
+    html += `<hr><p style="font-size:18px; color:var(--primary);"><b>SALDO LÍQUIDO: R$ ${(totalEntradas - totalSaidas).toFixed(2)}</b></p></div>`;
+    
+    document.getElementById('resultado-financeiro').innerHTML = html;
+};
     </script>
 </body>
 </html>
