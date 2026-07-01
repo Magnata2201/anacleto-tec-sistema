@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="icon" type="image/png" href="logo03.png">
     <link rel="apple-touch-icon" href="logo03.png">
-    <link href="https://fonts.googleapis.com/css2..." rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root { 
@@ -115,6 +115,7 @@
         </div>
         <nav>
             <div class="nav-section-title">Administração</div>
+            <a class="nav-link" onclick="setPage('Financeiro')"><i class="fa-solid fa-chart-line"></i> Financeiro</a>
             <a class="nav-link" onclick="setPage('Empresa')"><i class="fa-solid fa-building"></i> Minha Empresa</a>
             <a class="nav-link" onclick="setPage('Usuários')"><i class="fa-solid fa-user-gear"></i> Usuários</a>
             <div class="nav-section-title">Operacional</div>
@@ -195,9 +196,32 @@
         window.closeModal = () => document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none');
         window.toggleSub = (id) => document.getElementById(id).classList.toggle('show');
 
-        const paths = { 'Clientes': 'clientes', 'Fornecedores': 'fornecedores', 'Produtos': 'produtos', 'Serviços': 'servicos', 'Ordens de Serviços': 'ordens_servicos', 'Usuários': 'usuarios', 'Estoque': 'estoques' };
-
+        const paths = { 
+    'Clientes': 'clientes', 
+    'Fornecedores': 'fornecedores', 
+    'Produtos': 'produtos', 
+    'Serviços': 'servicos', 
+    'Ordens de Serviços': 'ordens_servicos', 
+    'Usuários': 'usuarios', 
+    'Estoque': 'estoques',
+    'Financeiro': 'despesas' // Nova linha
+};
         window.setPage = (name) => {
+            if(name === 'Financeiro') {
+    // Dentro do setPage -> if(name === 'Financeiro')
+document.getElementById('header-btns').innerHTML = `<button onclick="openFinanceModal()" style="background:var(--secondary);color:white;border:none;padding:8px 15px;border-radius:6px;cursor:pointer;">+ Nova Despesa</button>`;
+document.getElementById('main-content').innerHTML = `
+    <div style="background:var(--card-bg); padding:20px; border-radius:8px; border:1px solid var(--border-color);">
+        <h3 style="color:var(--primary); text-align:center;">Relatório Detalhado de Fechamento</h3>
+        <div style="display:flex; justify-content:center; gap:10px; margin-bottom:20px;">
+            <input type="month" id="mes-fechamento" style="padding:10px; border-radius:4px; border:1px solid var(--border-color); background:var(--bg-light); color:white;">
+            <button onclick="calcularFinanceiroDetalhado()" style="padding:10px 20px; background:var(--primary); color:white; border:none; border-radius:4px; cursor:pointer;">Gerar Relatório</button>
+        </div>
+        <div id="resultado-financeiro"></div>
+    </div>
+`;
+    return;
+}
             currentPg = name; document.getElementById('title').innerText = name;
             document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
             if(window.innerWidth <= 768) window.toggleSidebar();
@@ -397,18 +421,18 @@
             </div>`;
         }
 
-
-        /* ======================================================================================
-           RESOLUÇÃO FINAL DO PDF: GERA UMA PÁGINA VIRTUAL COM LARGURA EXATA (MÉTODO LIMPO E 100% SEGURO)
-           ====================================================================================== */
         async function processPDF(action) {
             const btn = document.getElementById('btn-down-pdf');
             if(btn) { btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; btn.disabled = true; }
 
             const element = document.getElementById('os-print-area');
 
-            // Aqui nós montamos um mini-site invisível e isolado só para tirar a foto
-            // Fixamos a largura do body em 760px. Isso resolve a matemática para as margens encaixarem perfeito!
+            // Salvamos as tags em variáveis para que o Live Server e o VS Code
+            // não leiam isso como código de fechamento real durante a edição.
+            const endHead = "</" + "head>";
+            const endBody = "</" + "body>";
+            const endHtml = "</" + "html>";
+
             const printContent = `
                 <!DOCTYPE html>
                 <html>
@@ -424,7 +448,7 @@
                             background: white; 
                             margin: 0; 
                             padding: 0; 
-                            width: 760px; /* Largura cravada para não ser afetada pelo seu monitor */
+                            width: 760px;
                         }
                         .pdf-container { 
                             width: 100%; 
@@ -438,16 +462,15 @@
                         .os-table td { padding: 10px; border: 1px solid #cbd5e1; font-size: 12px; }
                         * { color: black !important; }
                     </style>
-                </head>
+                ${endHead}
                 <body>
                     <div class="pdf-container">
                         ${element.innerHTML}
                     </div>
-                </body>
-                </html>
+                ${endBody}
+                ${endHtml}
             `;
 
-            // Configuração do gerador: Margem de 12mm é o segredo para os 760px de largura encaixarem sem cortar
             const opt = { 
                 margin: 12, 
                 filename: `OS_${currentOSData.numero}.pdf`, 
@@ -457,7 +480,6 @@
             };
 
             try {
-                // A biblioteca pega nosso código virtual, gera a foto perfeitamente dimensionada e cria o PDF
                 if (action === 'download') { 
                     await html2pdf().set(opt).from(printContent).save(); 
                 } else { 
@@ -473,7 +495,6 @@
                 console.error("Erro na geração do PDF:", error);
                 alert("Falha ao gerar o arquivo PDF.");
             } finally {
-                // Devolve a vida ao botão de baixar
                 if(btn) { btn.innerHTML = '<i class="fa-solid fa-download"></i>'; btn.disabled = false; }
             }
         }
@@ -497,6 +518,101 @@
         };
 
         setPage('Ordens de Serviços');
+
+        window.openFinanceModal = () => {
+    document.getElementById('modal-generic').style.display = 'flex';
+    document.getElementById('modal-body-content').innerHTML = `
+        <div class="form-group"><label>Descrição</label><input type="text" id="d-desc"></div>
+        <div class="form-group"><label>Valor (R$)</label><input type="number" id="d-val" step="0.01"></div>
+        <button onclick="salvarDespesa()" style="width:100%;padding:14px;background:var(--secondary);color:white;border:none;border-radius:4px;cursor:pointer;">SALVAR DESPESA</button>
+    `;
+};
+
+window.salvarDespesa = async () => {
+    const desc = document.getElementById('d-desc').value;
+    const val = parseFloat(document.getElementById('d-val').value);
+    await addDoc(collection(db, "despesas"), { descricao: desc, valor: val, data: new Date().toISOString().slice(0,7), criadoEm: new Date() });
+    alert("Despesa salva!");
+    closeModal();
+};
+
+window.calcularFinanceiro = async () => {
+    const mes = document.getElementById('mes-fechamento').value;
+    const osSnap = await getDocs(collection(db, "ordens_servicos"));
+    const despSnap = await getDocs(collection(db, "despesas"));
+    
+    let totalEntradas = 0;
+    osSnap.forEach(doc => {
+        const d = doc.data();
+        if(d.pago && d.dataSimples.includes(mes.split('-').reverse().join('/'))) totalEntradas += d.total;
+    });
+
+    let totalSaidas = 0;
+    despSnap.forEach(doc => {
+        const d = doc.data();
+        if(d.data === mes) totalSaidas += d.valor;
+    });
+
+    document.getElementById('resultado-financeiro').innerHTML = `
+        <p>Entradas: R$ ${totalEntradas.toFixed(2)}</p>
+        <p style="color:#ef4444">Saídas: R$ ${totalSaidas.toFixed(2)}</p>
+        <hr style="border:1px solid var(--border-color)">
+        <p><b>Saldo Final: R$ ${(totalEntradas - totalSaidas).toFixed(2)}</b></p>
+    `;
+};
+
+window.calcularFinanceiroDetalhado = async () => {
+    const mes = document.getElementById('mes-fechamento').value; // Formato YYYY-MM
+    if(!mes) return alert("Selecione o mês!");
+
+    const osSnap = await getDocs(collection(db, "ordens_servicos"));
+    const despSnap = await getDocs(collection(db, "despesas"));
+    
+    let html = `<table class="os-table" style="width:100%; border-collapse:collapse; margin-top:20px;">
+        <thead><tr><th>Cliente</th><th>Item/Serviço</th><th>Qtd</th><th>Valor Unit.</th><th>Subtotal</th></tr></thead><tbody>`;
+    
+    let totalEntradas = 0;
+
+    // Processar OS
+    osSnap.forEach(doc => {
+        const d = doc.data();
+        const dataOS = d.dataSimples.split('/'); // Converte DD/MM/YYYY para comparação
+        const mesOS = `${dataOS[2]}-${dataOS[1]}`;
+
+        if(d.pago && mesOS === mes) {
+            d.itens.forEach(item => {
+                html += `<tr>
+                    <td>${d.cliente}</td>
+                    <td>${item.nome}</td>
+                    <td>${item.qty}</td>
+                    <td>R$ ${item.price.toFixed(2)}</td>
+                    <td>R$ ${item.sub.toFixed(2)}</td>
+                </tr>`;
+                totalEntradas += item.sub;
+            });
+        }
+    });
+
+    html += `</tbody></table><div style="margin-top:20px; padding:15px; background:#1e293b; border-radius:6px;">`;
+    html += `<h4>Resumo Financeiro</h4>`;
+    html += `<p>Total de Entradas: <b>R$ ${totalEntradas.toFixed(2)}</b></p>`;
+
+    // Processar Despesas
+    let totalSaidas = 0;
+    html += `<h4 style="margin-top:15px;">Despesas Lançadas:</h4><ul>`;
+    despSnap.forEach(doc => {
+        const d = doc.data();
+        if(d.data === mes) {
+            html += `<li>${d.descricao}: R$ ${d.valor.toFixed(2)}</li>`;
+            totalSaidas += d.valor;
+        }
+    });
+    html += `</ul>`;
+
+    html += `<hr><p style="font-size:18px; color:var(--primary);"><b>SALDO LÍQUIDO: R$ ${(totalEntradas - totalSaidas).toFixed(2)}</b></p></div>`;
+    
+    document.getElementById('resultado-financeiro').innerHTML = html;
+};
     </script>
 </body>
 </html>
