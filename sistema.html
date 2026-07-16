@@ -52,9 +52,8 @@
         .os-details b { font-size: 13px; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #fff; }
         .os-details span { color: var(--text-muted); font-size: 11px; display: block; margin-top: 2px;}
 
-        .paid-check-area { display: flex; flex-direction: column; align-items: center; gap: 2px; margin-left: 10px; padding-left: 10px; border-left: 1px solid var(--border-color); }
-        .paid-check-area input { width: 18px; height: 18px; cursor: pointer; accent-color: var(--secondary); }
-        .paid-check-area label { font-size: 8px; font-weight: bold; color: var(--text-muted); }
+        .paid-check-area { display: flex; flex-direction: column; align-items: center; gap: 2px; margin-left: 10px; padding: 5px 10px; border-radius:4px; background: #1e293b; transition: 0.2s; }
+        .paid-check-area:hover { filter: brightness(1.2); }
 
         /* --- Modais --- */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 10px; box-sizing: border-box; }
@@ -85,7 +84,6 @@
         .fab { position: fixed; bottom: 20px; right: 20px; width: 56px; height: 56px; background: var(--secondary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; border: none; cursor: pointer; box-shadow: 0 5px 15px rgba(255, 115, 0, 0.4); z-index: 500; transition: 0.3s; }
         .fab:hover { transform: scale(1.1); }
 
-        /* Caixa de Informações */
         .info-box { background: #1e293b; padding: 15px; border-radius: 6px; margin-bottom: 20px; font-size: 13px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; }
 
         @media (max-width: 768px) {
@@ -96,12 +94,25 @@
             .sidebar-overlay.show { display: block; }
         }
 
-        /* Estilo de impressão direta (Crtl+P) */
+        /* Correção para impressão em branco */
         @media print {
             aside, .fab, header, .modal-overlay, .btn-menu { display: none !important; }
-            body { background: white !important; color: black !important; display: block;}
-            .os-view-container { border: none !important; width: 100% !important; padding: 0 !important; margin: 0 !important; max-width: none !important;}
-            .info-box { background: #f1f5f9 !important; border: 1px solid #ccc !important; }
+            body, main, .content { 
+                display: block !important; 
+                height: auto !important; 
+                overflow: visible !important; 
+                position: static !important;
+                background: white !important; 
+                color: black !important;
+            }
+            .os-view-container { 
+                border: none !important; 
+                width: 100% !important; 
+                padding: 0 !important; 
+                margin: 0 !important; 
+                max-width: none !important;
+            }
+            .info-box { background: #f1f5f9 !important; border: 1px solid #ccc !important; color: black !important; }
             * { color: black !important; }
         }
     </style>
@@ -141,6 +152,25 @@
         <div class="content" id="main-content"></div>
         <button class="fab" onclick="handleFab()"><i class="fa-solid fa-plus"></i></button>
     </main>
+
+    <!-- Modal Pagamento Parcial/Total -->
+    <div class="modal-overlay" id="modal-payment">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 style="margin:0;">Lançar Pagamento</h3>
+                <button onclick="closeModal()" style="background:none;border:none;color:white;font-size:24px;cursor:pointer;">&times;</button>
+            </div>
+            <div class="modal-body">
+                <h4 style="margin:0 0 10px 0; color:var(--primary);">Total da OS: R$ <span id="pay-total">0.00</span></h4>
+                <p style="margin:0 0 15px 0; color:var(--text-muted);">Valor já recebido: R$ <span id="pay-current">0.00</span></p>
+                <div class="form-group">
+                    <label>Adicionar Pagamento (R$)</label>
+                    <input type="number" id="pay-val" step="0.01" min="0">
+                </div>
+                <button onclick="confirmPayment()" style="width:100%; background:var(--secondary); color:white; border:none; padding:15px; font-weight:bold; border-radius:4px; margin-top:10px; cursor: pointer;">CONFIRMAR PAGAMENTO</button>
+            </div>
+        </div>
+    </div>
 
     <div class="modal-overlay" id="modal-generic"><div class="modal-box"><div class="modal-header"><h3 id="modal-title" style="margin:0;">Cadastro</h3><button onclick="closeModal()" style="background:none;border:none;color:white;font-size:24px;cursor:pointer;">&times;</button></div><div class="modal-body" id="modal-body-content"></div></div></div>
     <div class="modal-overlay" id="modal-search"><div class="modal-box"><div class="modal-header"><h3 style="margin:0;">Selecionar</h3><button onclick="closeModal()" style="background:none;border:none;color:white;font-size:24px;cursor:pointer;">&times;</button></div><div style="padding:10px;"><input type="text" id="m-input" placeholder="Pesquisar..." style="width:100%; padding:12px; border:1px solid var(--border-color); border-radius:6px; background:var(--bg-light); color:#fff; box-sizing: border-box; outline:none;"></div><div id="m-list" style="max-height:60vh; overflow-y:auto; padding: 0 10px 10px 10px;"></div></div></div>
@@ -190,6 +220,7 @@
         let osDraft = { cliente: null, fornecedor: 'ANACLETO TEC', itens: [], total: 0, desconto: 0 };
         let currentOSId = null;
         let currentOSData = null;
+        let currentPayId = null;
         let allOsDocs = [];
 
         window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('sb-overlay').classList.toggle('show'); };
@@ -197,31 +228,31 @@
         window.toggleSub = (id) => document.getElementById(id).classList.toggle('show');
 
         const paths = { 
-    'Clientes': 'clientes', 
-    'Fornecedores': 'fornecedores', 
-    'Produtos': 'produtos', 
-    'Serviços': 'servicos', 
-    'Ordens de Serviços': 'ordens_servicos', 
-    'Usuários': 'usuarios', 
-    'Estoque': 'estoques',
-    'Financeiro': 'despesas' // Nova linha
-};
+            'Clientes': 'clientes', 
+            'Fornecedores': 'fornecedores', 
+            'Produtos': 'produtos', 
+            'Serviços': 'servicos', 
+            'Ordens de Serviços': 'ordens_servicos', 
+            'Usuários': 'usuarios', 
+            'Estoque': 'estoques',
+            'Financeiro': 'despesas'
+        };
+
         window.setPage = (name) => {
             if(name === 'Financeiro') {
-    // Dentro do setPage -> if(name === 'Financeiro')
-document.getElementById('header-btns').innerHTML = `<button onclick="openFinanceModal()" style="background:var(--secondary);color:white;border:none;padding:8px 15px;border-radius:6px;cursor:pointer;">+ Nova Despesa</button>`;
-document.getElementById('main-content').innerHTML = `
-    <div style="background:var(--card-bg); padding:20px; border-radius:8px; border:1px solid var(--border-color);">
-        <h3 style="color:var(--primary); text-align:center;">Relatório Detalhado de Fechamento</h3>
-        <div style="display:flex; justify-content:center; gap:10px; margin-bottom:20px;">
-            <input type="month" id="mes-fechamento" style="padding:10px; border-radius:4px; border:1px solid var(--border-color); background:var(--bg-light); color:white;">
-            <button onclick="calcularFinanceiroDetalhado()" style="padding:10px 20px; background:var(--primary); color:white; border:none; border-radius:4px; cursor:pointer;">Gerar Relatório</button>
-        </div>
-        <div id="resultado-financeiro"></div>
-    </div>
-`;
-    return;
-}
+                document.getElementById('header-btns').innerHTML = `<button onclick="openFinanceModal()" style="background:var(--secondary);color:white;border:none;padding:8px 15px;border-radius:6px;cursor:pointer;">+ Nova Despesa</button>`;
+                document.getElementById('main-content').innerHTML = `
+                    <div style="background:var(--card-bg); padding:20px; border-radius:8px; border:1px solid var(--border-color);">
+                        <h3 style="color:var(--primary); text-align:center;">Relatório Detalhado de Fechamento</h3>
+                        <div style="display:flex; justify-content:center; gap:10px; margin-bottom:20px;">
+                            <input type="month" id="mes-fechamento" style="padding:10px; border-radius:4px; border:1px solid var(--border-color); background:var(--bg-light); color:white;">
+                            <button onclick="calcularFinanceiroDetalhado()" style="padding:10px 20px; background:var(--primary); color:white; border:none; border-radius:4px; cursor:pointer;">Gerar Relatório</button>
+                        </div>
+                        <div id="resultado-financeiro"></div>
+                    </div>
+                `;
+                return;
+            }
             currentPg = name; document.getElementById('title').innerText = name;
             document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
             if(window.innerWidth <= 768) window.toggleSidebar();
@@ -275,16 +306,33 @@ document.getElementById('main-content').innerHTML = `
 
             docs.forEach(data => {
                 const card = document.createElement('div'); card.className = 'os-card';
-                const isPaid = data.pago || false; if(isPaid) card.classList.add('paid-os');
                 card.onclick = () => viewOSDetail(data.id);
-                const totalList = (data.total || 0).toFixed(2);
+                
+                let totalOS = data.total || 0;
+                let valorPago = data.valorPago !== undefined ? data.valorPago : (data.pago ? totalOS : 0);
+                
+                let statusColor = 'var(--text-muted)';
+                let statusText = 'PENDENTE';
+                
+                if(valorPago >= totalOS && totalOS > 0) {
+                    statusColor = '#10b981';
+                    statusText = 'PAGO';
+                    card.style.borderLeft = `4px solid ${statusColor}`;
+                } else if(valorPago > 0) {
+                    statusColor = '#f59e0b';
+                    statusText = 'PARCIAL';
+                    card.style.borderLeft = `4px solid ${statusColor}`;
+                }
                 
                 card.innerHTML = `
                     <div class="os-badge">${data.numero}</div>
-                    <div class="os-details"><b>${data.cliente}</b><span>${data.dataSimples} - R$ ${totalList}</span></div>
-                    <div class="paid-check-area" onclick="event.stopPropagation()">
-                        <input type="checkbox" ${isPaid?'checked':''} onchange="window.togglePaidStatus('${data.id}',this.checked)">
-                        <label>${isPaid?'PAGO':'PENDENTE'}</label>
+                    <div class="os-details">
+                        <b>${data.cliente}</b>
+                        <span>${data.dataSimples} - Total: R$ ${totalOS.toFixed(2)}</span>
+                    </div>
+                    <div class="paid-check-area" onclick="event.stopPropagation(); window.openPaymentModal('${data.id}')" title="Lançar Pagamento">
+                        <label style="color: ${statusColor}; font-size:9px; font-weight:bold; cursor:pointer;">${statusText}</label>
+                        <span style="font-size:11px; font-weight:bold; color:#fff; display:block;">R$ ${valorPago.toFixed(2)}</span>
                     </div>
                     <div style="margin-left:15px; padding-left:15px; border-left:1px solid var(--border-color); display:flex; align-items:center;" onclick="event.stopPropagation()">
                         <i class="fa-solid fa-trash" style="color:#ef4444; cursor:pointer; font-size:18px;" onclick="deleteDocGeneric('ordens_servicos', '${data.id}')" title="Excluir OS"></i>
@@ -292,6 +340,35 @@ document.getElementById('main-content').innerHTML = `
                 `;
                 container.appendChild(card);
             });
+        };
+
+        window.openPaymentModal = (id) => {
+            currentPayId = id;
+            const os = allOsDocs.find(o => o.id === id);
+            if(!os) return;
+            
+            let total = os.total || 0;
+            let pagoAtualmente = os.valorPago !== undefined ? os.valorPago : (os.pago ? total : 0);
+            
+            document.getElementById('pay-total').innerText = total.toFixed(2);
+            document.getElementById('pay-current').innerText = pagoAtualmente.toFixed(2);
+            document.getElementById('pay-val').value = Math.max(0, total - pagoAtualmente).toFixed(2);
+            document.getElementById('modal-payment').style.display = 'flex';
+        };
+
+        window.confirmPayment = async () => {
+            const addPay = parseFloat(document.getElementById('pay-val').value || 0);
+            if(addPay < 0) return alert("O valor não pode ser negativo.");
+            
+            const os = allOsDocs.find(o => o.id === currentPayId);
+            let pagoAtualmente = os.valorPago !== undefined ? os.valorPago : (os.pago ? os.total : 0);
+            let novoTotalPago = pagoAtualmente + addPay;
+            
+            await updateDoc(doc(db, "ordens_servicos", currentPayId), { 
+                valorPago: novoTotalPago,
+                pago: novoTotalPago >= os.total
+            });
+            closeModal();
         };
 
         window.filterOS = () => {
@@ -310,8 +387,6 @@ document.getElementById('main-content').innerHTML = `
             window.renderOSList(filtered);
         };
 
-        window.togglePaidStatus = async (id, status) => { await updateDoc(doc(db, "ordens_servicos", id), { pago: status }); };
-
         async function loadConfig() { const d = await getDoc(doc(db, "config", "empresa")); if(d.exists()) configEmpresa = d.data(); }
         loadConfig();
         function renderCompanyForm() {
@@ -326,7 +401,7 @@ document.getElementById('main-content').innerHTML = `
                 const d = await getDoc(doc(db, "ordens_servicos", editId));
                 osDraft = d.data();
             } else {
-                osDraft = { cliente: null, fornecedor: configEmpresa.nome || 'ANACLETO TEC', itens: [], total: 0, desconto: 0 };
+                osDraft = { cliente: null, fornecedor: configEmpresa.nome || 'ANACLETO TEC', itens: [], total: 0, desconto: 0, valorPago: 0 };
             }
 
             document.getElementById('header-btns').innerHTML = `<button onclick="saveOS()" style="background:var(--secondary); color:white; border:none; padding:8px 15px; border-radius:6px; font-weight:bold; cursor:pointer;"><i class="fa-solid fa-check"></i> ${editingId?'ATUALIZAR':'SALVAR'}</button>`;
@@ -377,7 +452,7 @@ document.getElementById('main-content').innerHTML = `
             } else {
                 const snap = await getDocs(collection(db, "ordens_servicos")); 
                 const num = (snap.size + 1).toString().padStart(4, '0'); 
-                await addDoc(collection(db, "ordens_servicos"), { ...osDraft, numero: num, dataSimples: new Date().toLocaleDateString('pt-BR'), criadoEm: new Date(), pago: false }); 
+                await addDoc(collection(db, "ordens_servicos"), { ...osDraft, numero: num, dataSimples: new Date().toLocaleDateString('pt-BR'), criadoEm: new Date(), pago: false, valorPago: 0 }); 
             }
             setPage('Ordens de Serviços'); 
         };
@@ -402,6 +477,7 @@ document.getElementById('main-content').innerHTML = `
             
             const sub = data.itens.reduce((acc, i) => acc + i.sub, 0);
             const totalFinal = (data.total || 0).toFixed(2);
+            let pagoAtualmente = data.valorPago !== undefined ? data.valorPago : (data.pago ? totalFinal : 0);
             
             document.getElementById('main-content').innerHTML = `
             <div class="os-view-container" id="os-print-area" style="background:var(--card-bg);padding:30px;border-radius:8px;border:1px solid var(--border-color); max-width: 800px; margin: 0 auto;">
@@ -416,88 +492,78 @@ document.getElementById('main-content').innerHTML = `
                 <div style="text-align:right;margin-top:15px;">Subtotal: R$ ${sub.toFixed(2)}</div>
                 ${data.desconto > 0 ? `<div style="text-align:right;color:var(--secondary);">Desconto: - R$ ${data.desconto.toFixed(2)}</div>`:''}
                 <div style="text-align:right;font-weight:bold;font-size:24px;color:var(--primary);margin-top:10px;border-top:1px solid var(--border-color);padding-top:10px;">TOTAL: R$ ${totalFinal}</div>
+                <div style="text-align:right;font-weight:bold;font-size:16px;color:#10b981;margin-top:5px;">VALOR PAGO: R$ ${Number(pagoAtualmente).toFixed(2)}</div>
                 ${data.assinatura ? `<div style="margin-top:40px;text-align:center;"><img src="${data.assinatura}" style="max-width:250px;border-bottom:1px solid #ccc;"><p style="font-size:12px;">Assinatura do Cliente</p></div>` : `<div style="margin-top:60px;text-align:center;"><div style="width:250px;border-top:1px solid #ccc;margin:0 auto;"></div><p style="font-size:12px;">Assinatura do Cliente</p></div>`}
                 <div style="margin-top:40px;text-align:center;font-style:italic;font-size:12px;">${configEmpresa.agradecimento || 'Obrigado pela preferência!'}</div>
             </div>`;
         }
 
-        async function processPDF(action) {
-            const btn = document.getElementById('btn-down-pdf');
-            if(btn) { btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; btn.disabled = true; }
+       async function processPDF(action) {
+    const btn = document.getElementById('btn-down-pdf');
+    if(btn) { btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; btn.disabled = true; }
 
-            const element = document.getElementById('os-print-area');
+    const element = document.getElementById('os-print-area');
+    const endHead = "</" + "head>";
+    const endBody = "</" + "body>";
+    const endHtml = "</" + "html>";
 
-            // Salvamos as tags em variáveis para que o Live Server e o VS Code
-            // não leiam isso como código de fechamento real durante a edição.
-            const endHead = "</" + "head>";
-            const endBody = "</" + "body>";
-            const endHtml = "</" + "html>";
+    const printContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                :root { --primary: #00a2ff; --secondary: #ff7300; --border-color: #cbd5e1; }
+                body { font-family: 'Segoe UI', sans-serif; background: white; margin: 0; padding: 0; width: 760px; }
+                .pdf-container { width: 100%; padding: 20px; box-sizing: border-box; background: white; }
+                .info-box { background: #f1f5f9; padding: 15px; border-radius: 6px; margin-bottom: 20px; font-size: 13px; border: 1px solid #cbd5e1; display: flex; justify-content: space-between; }
+                .os-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+                .os-table th { background: #e2e8f0; text-align: left; padding: 10px; border: 1px solid #cbd5e1; font-size: 11px; text-transform: uppercase; }
+                .os-table td { padding: 10px; border: 1px solid #cbd5e1; font-size: 12px; }
+                * { color: black !important; }
+            </style>
+        ${endHead}
+        <body>
+            <div class="pdf-container">
+                ${element.innerHTML}
+            </div>
+        ${endBody}
+        ${endHtml}
+    `;
 
-            const printContent = `
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <style>
-                        :root { 
-                            --primary: #00a2ff; 
-                            --secondary: #ff7300; 
-                            --border-color: #cbd5e1;
-                        }
-                        body { 
-                            font-family: 'Segoe UI', sans-serif; 
-                            background: white; 
-                            margin: 0; 
-                            padding: 0; 
-                            width: 760px;
-                        }
-                        .pdf-container { 
-                            width: 100%; 
-                            padding: 20px; 
-                            box-sizing: border-box; 
-                            background: white; 
-                        }
-                        .info-box { background: #f1f5f9; padding: 15px; border-radius: 6px; margin-bottom: 20px; font-size: 13px; border: 1px solid #cbd5e1; display: flex; justify-content: space-between; }
-                        .os-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-                        .os-table th { background: #e2e8f0; text-align: left; padding: 10px; border: 1px solid #cbd5e1; font-size: 11px; text-transform: uppercase; }
-                        .os-table td { padding: 10px; border: 1px solid #cbd5e1; font-size: 12px; }
-                        * { color: black !important; }
-                    </style>
-                ${endHead}
-                <body>
-                    <div class="pdf-container">
-                        ${element.innerHTML}
-                    </div>
-                ${endBody}
-                ${endHtml}
-            `;
+    const opt = { 
+        margin: 12, 
+        filename: `OS_${currentOSData.numero}.pdf`, 
+        image: { type: 'jpeg', quality: 1 }, 
+        html2canvas: { scale: 2, useCORS: true }, 
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } 
+    };
 
-            const opt = { 
-                margin: 12, 
-                filename: `OS_${currentOSData.numero}.pdf`, 
-                image: { type: 'jpeg', quality: 1 }, 
-                html2canvas: { scale: 2, useCORS: true }, 
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } 
-            };
-
-            try {
-                if (action === 'download') { 
-                    await html2pdf().set(opt).from(printContent).save(); 
+    try {
+        if (window.AndroidApp) {
+            // Rotina para o Aplicativo Nativo
+            const base64Data = await html2pdf().set(opt).from(printContent).outputPdf('datauristring');
+            window.AndroidApp.sharePdf(base64Data, opt.filename);
+        } else {
+            // Rotina para o Navegador Web
+            if (action === 'download') { 
+                await html2pdf().set(opt).from(printContent).save(); 
+            } else { 
+                const pdfBlob = await html2pdf().set(opt).from(printContent).outputPdf('blob'); 
+                const file = new File([pdfBlob], opt.filename, { type: 'application/pdf' }); 
+                if (navigator.canShare && navigator.canShare({ files: [file] })) { 
+                    await navigator.share({ files: [file], title: 'OS', text: 'Segue a OS' }); 
                 } else { 
-                    const pdfBlob = await html2pdf().set(opt).from(printContent).outputPdf('blob'); 
-                    const file = new File([pdfBlob], opt.filename, { type: 'application/pdf' }); 
-                    if (navigator.canShare && navigator.canShare({ files: [file] })) { 
-                        await navigator.share({ files: [file], title: 'OS', text: 'Segue a OS' }); 
-                    } else { 
-                        await html2pdf().set(opt).from(printContent).save(); 
-                    } 
-                }
-            } catch (error) {
-                console.error("Erro na geração do PDF:", error);
-                alert("Falha ao gerar o arquivo PDF.");
-            } finally {
-                if(btn) { btn.innerHTML = '<i class="fa-solid fa-download"></i>'; btn.disabled = false; }
+                    await html2pdf().set(opt).from(printContent).save(); 
+                } 
             }
         }
+    } catch (error) {
+        console.error("Erro na geração do PDF:", error);
+        alert("Falha ao gerar o arquivo PDF.");
+    } finally {
+        if(btn) { btn.innerHTML = '<i class="fa-solid fa-download"></i>'; btn.disabled = false; }
+    }
+}
         
         window.downloadPDF = () => processPDF('download');
         window.sharePDF = () => processPDF('share');
@@ -520,99 +586,72 @@ document.getElementById('main-content').innerHTML = `
         setPage('Ordens de Serviços');
 
         window.openFinanceModal = () => {
-    document.getElementById('modal-generic').style.display = 'flex';
-    document.getElementById('modal-body-content').innerHTML = `
-        <div class="form-group"><label>Descrição</label><input type="text" id="d-desc"></div>
-        <div class="form-group"><label>Valor (R$)</label><input type="number" id="d-val" step="0.01"></div>
-        <button onclick="salvarDespesa()" style="width:100%;padding:14px;background:var(--secondary);color:white;border:none;border-radius:4px;cursor:pointer;">SALVAR DESPESA</button>
-    `;
-};
+            document.getElementById('modal-generic').style.display = 'flex';
+            document.getElementById('modal-body-content').innerHTML = `
+                <div class="form-group"><label>Descrição</label><input type="text" id="d-desc"></div>
+                <div class="form-group"><label>Valor (R$)</label><input type="number" id="d-val" step="0.01"></div>
+                <button onclick="salvarDespesa()" style="width:100%;padding:14px;background:var(--secondary);color:white;border:none;border-radius:4px;cursor:pointer;">SALVAR DESPESA</button>
+            `;
+        };
 
-window.salvarDespesa = async () => {
-    const desc = document.getElementById('d-desc').value;
-    const val = parseFloat(document.getElementById('d-val').value);
-    await addDoc(collection(db, "despesas"), { descricao: desc, valor: val, data: new Date().toISOString().slice(0,7), criadoEm: new Date() });
-    alert("Despesa salva!");
-    closeModal();
-};
+        window.salvarDespesa = async () => {
+            const desc = document.getElementById('d-desc').value;
+            const val = parseFloat(document.getElementById('d-val').value);
+            await addDoc(collection(db, "despesas"), { descricao: desc, valor: val, data: new Date().toISOString().slice(0,7), criadoEm: new Date() });
+            alert("Despesa salva!");
+            closeModal();
+        };
 
-window.calcularFinanceiro = async () => {
-    const mes = document.getElementById('mes-fechamento').value;
-    const osSnap = await getDocs(collection(db, "ordens_servicos"));
-    const despSnap = await getDocs(collection(db, "despesas"));
-    
-    let totalEntradas = 0;
-    osSnap.forEach(doc => {
-        const d = doc.data();
-        if(d.pago && d.dataSimples.includes(mes.split('-').reverse().join('/'))) totalEntradas += d.total;
-    });
+        window.calcularFinanceiroDetalhado = async () => {
+            const mes = document.getElementById('mes-fechamento').value;
+            if(!mes) return alert("Selecione o mês!");
 
-    let totalSaidas = 0;
-    despSnap.forEach(doc => {
-        const d = doc.data();
-        if(d.data === mes) totalSaidas += d.valor;
-    });
+            const osSnap = await getDocs(collection(db, "ordens_servicos"));
+            const despSnap = await getDocs(collection(db, "despesas"));
+            
+            let html = `<table class="os-table" style="width:100%; border-collapse:collapse; margin-top:20px;">
+                <thead><tr><th>Cliente</th><th>Referência</th><th>Status</th><th>Valor Recebido</th></tr></thead><tbody>`;
+            
+            let totalEntradas = 0;
 
-    document.getElementById('resultado-financeiro').innerHTML = `
-        <p>Entradas: R$ ${totalEntradas.toFixed(2)}</p>
-        <p style="color:#ef4444">Saídas: R$ ${totalSaidas.toFixed(2)}</p>
-        <hr style="border:1px solid var(--border-color)">
-        <p><b>Saldo Final: R$ ${(totalEntradas - totalSaidas).toFixed(2)}</b></p>
-    `;
-};
+            osSnap.forEach(doc => {
+                const d = doc.data();
+                const dataOS = d.dataSimples.split('/');
+                const mesOS = `${dataOS[2]}-${dataOS[1]}`;
+                
+                let valPago = d.valorPago !== undefined ? d.valorPago : (d.pago ? (d.total || 0) : 0);
 
-window.calcularFinanceiroDetalhado = async () => {
-    const mes = document.getElementById('mes-fechamento').value; // Formato YYYY-MM
-    if(!mes) return alert("Selecione o mês!");
-
-    const osSnap = await getDocs(collection(db, "ordens_servicos"));
-    const despSnap = await getDocs(collection(db, "despesas"));
-    
-    let html = `<table class="os-table" style="width:100%; border-collapse:collapse; margin-top:20px;">
-        <thead><tr><th>Cliente</th><th>Item/Serviço</th><th>Qtd</th><th>Valor Unit.</th><th>Subtotal</th></tr></thead><tbody>`;
-    
-    let totalEntradas = 0;
-
-    // Processar OS
-    osSnap.forEach(doc => {
-        const d = doc.data();
-        const dataOS = d.dataSimples.split('/'); // Converte DD/MM/YYYY para comparação
-        const mesOS = `${dataOS[2]}-${dataOS[1]}`;
-
-        if(d.pago && mesOS === mes) {
-            d.itens.forEach(item => {
-                html += `<tr>
-                    <td>${d.cliente}</td>
-                    <td>${item.nome}</td>
-                    <td>${item.qty}</td>
-                    <td>R$ ${item.price.toFixed(2)}</td>
-                    <td>R$ ${item.sub.toFixed(2)}</td>
-                </tr>`;
-                totalEntradas += item.sub;
+                if(valPago > 0 && mesOS === mes) {
+                    html += `<tr>
+                        <td>${d.cliente}</td>
+                        <td>OS #${d.numero}</td>
+                        <td>${valPago >= d.total ? 'Total' : 'Parcial'}</td>
+                        <td style="color:#10b981">R$ ${valPago.toFixed(2)}</td>
+                    </tr>`;
+                    totalEntradas += valPago;
+                }
             });
-        }
-    });
 
-    html += `</tbody></table><div style="margin-top:20px; padding:15px; background:#1e293b; border-radius:6px;">`;
-    html += `<h4>Resumo Financeiro</h4>`;
-    html += `<p>Total de Entradas: <b>R$ ${totalEntradas.toFixed(2)}</b></p>`;
+            html += `</tbody></table><div style="margin-top:20px; padding:15px; background:#1e293b; border-radius:6px;">`;
+            html += `<h4>Resumo Financeiro</h4>`;
+            html += `<p>Total de Entradas: <b style="color:#10b981">R$ ${totalEntradas.toFixed(2)}</b></p>`;
 
-    // Processar Despesas
-    let totalSaidas = 0;
-    html += `<h4 style="margin-top:15px;">Despesas Lançadas:</h4><ul>`;
-    despSnap.forEach(doc => {
-        const d = doc.data();
-        if(d.data === mes) {
-            html += `<li>${d.descricao}: R$ ${d.valor.toFixed(2)}</li>`;
-            totalSaidas += d.valor;
-        }
-    });
-    html += `</ul>`;
+            let totalSaidas = 0;
+            html += `<h4 style="margin-top:15px;">Despesas Lançadas:</h4><ul>`;
+            despSnap.forEach(doc => {
+                const d = doc.data();
+                if(d.data === mes) {
+                    html += `<li>${d.descricao}: <span style="color:#ef4444">R$ ${d.valor.toFixed(2)}</span></li>`;
+                    totalSaidas += d.valor;
+                }
+            });
+            html += `</ul>`;
 
-    html += `<hr><p style="font-size:18px; color:var(--primary);"><b>SALDO LÍQUIDO: R$ ${(totalEntradas - totalSaidas).toFixed(2)}</b></p></div>`;
-    
-    document.getElementById('resultado-financeiro').innerHTML = html;
-};
+            html += `<p>Total de Saídas: <b style="color:#ef4444">R$ ${totalSaidas.toFixed(2)}</b></p>`;
+            html += `<hr><p style="font-size:18px; color:var(--primary);"><b>SALDO LÍQUIDO: R$ ${(totalEntradas - totalSaidas).toFixed(2)}</b></p></div>`;
+            
+            document.getElementById('resultado-financeiro').innerHTML = html;
+        };
     </script>
 </body>
 </html>
