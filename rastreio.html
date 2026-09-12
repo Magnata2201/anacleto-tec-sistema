@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acompanhamento de Serviço</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { margin: 0; font-family: 'Roboto', sans-serif; background-color: #f1f5f9; color: #1e293b; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        .header { background: #161d2b; width: 100%; padding: 20px; text-align: center; color: white; border-bottom: 4px solid #00a2ff; box-sizing: border-box; }
+        .header img { max-width: 150px; height: auto; }
+        .card { background: white; width: 90%; max-width: 500px; padding: 25px; margin-top: -20px; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); box-sizing: border-box; }
+        h3 { text-align: center; color: #00a2ff; margin-top: 0; text-transform: uppercase; }
+        .info-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; }
+        
+        .timeline { margin-top: 30px; position: relative; padding-left: 20px; }
+        .timeline::before { content: ''; position: absolute; left: 6px; top: 0; bottom: 0; width: 2px; background: #cbd5e1; }
+        
+        .step { position: relative; padding-bottom: 20px; color: #94a3b8; font-weight: bold; }
+        .step::before { content: ''; position: absolute; left: -20px; top: 2px; width: 12px; height: 12px; border-radius: 50%; background: #cbd5e1; border: 2px solid white; box-shadow: 0 0 0 1px #cbd5e1; }
+        
+        .step.completed { color: #1e293b; }
+        .step.completed::before { background: #10b981; box-shadow: 0 0 0 1px #10b981; }
+        
+        .step.active { color: #00a2ff; }
+        .step.active::before { background: #00a2ff; box-shadow: 0 0 0 2px #00a2ff; animation: pulse 2s infinite; }
+
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(0, 162, 255, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(0, 162, 255, 0); } 100% { box-shadow: 0 0 0 0 rgba(0, 162, 255, 0); } }
+        #loading { text-align: center; padding: 40px; color: #00a2ff; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h2 id="empresa-nome">Consultando Status...</h2>
+    </div>
+
+    <div class="card" id="main-card">
+        <div id="loading"><i class="fa-solid fa-spinner fa-spin fa-2x"></i><br><br>Buscando serviço...</div>
+        
+        <div id="content" style="display:none;">
+            <h3 id="os-titulo-tipo">Detalhes da Ordem de Serviço</h3>
+            <div class="info-row"><b>Número:</b> <span id="os-num"></span></div>
+            <div class="info-row"><b>Cliente:</b> <span id="os-cli"></span></div>
+            <div class="info-row"><b>Data de Entrada:</b> <span id="os-data"></span></div>
+            <div class="info-row"><b>Valor Total:</b> <span id="os-total" style="font-weight:bold; color:#10b981;"></span></div>
+            
+            <div class="timeline" id="timeline"></div>
+            
+            <div style="margin-top:30px; text-align:center; font-size:12px; color:#94a3b8;">
+                Para mais informações, entre em contato com nosso atendimento via WhatsApp.
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, getDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // Configuração Padrão Garantida
+        const baseConfig = { 
+            apiKey: "AIzaSyB5g7W8l01WSQvq_Fahx32PiJfs-50LzNM", 
+            authDomain: "anacletotec-b655f.firebaseapp.com", 
+            databaseURL: "https://anacletotec-b655f-default-rtdb.firebaseio.com", 
+            projectId: "anacletotec-b655f", 
+            storageBucket: "anacletotec-b655f.firebasestorage.app", 
+            messagingSenderId: "652594939672", 
+            appId: "1:652594939672:web:4876c14dc7d943f382406d" 
+        };
+
+        let configuracoesBancos = [baseConfig];
+        try {
+            const bancosLocal = JSON.parse(localStorage.getItem("meusBancos"));
+            if(Array.isArray(bancosLocal) && bancosLocal.length > 0) {
+                configuracoesBancos = bancosLocal;
+            }
+        } catch(e) {}
+
+        const dbInstancias = [];
+        configuracoesBancos.forEach((conf, index) => { 
+            try { 
+                const appTemp = initializeApp(conf, "AppRastreio_" + index + "_" + Math.random()); 
+                dbInstancias.push(getFirestore(appTemp)); 
+            } catch(e) {
+                console.error("Erro ao conectar no banco " + index, e);
+            } 
+        });
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const osParam = urlParams.get('id');
+
+        async function carregarDados() {
+            if(!osParam) { 
+                document.getElementById('loading').innerHTML = "<i class='fa-solid fa-circle-exclamation fa-2x' style='color:#f59e0b;'></i><br><br><b>Erro:</b> Nenhum código ou número de OS foi informado no link."; 
+                return; 
+            }
+
+            try {
+                let osData = null;
+
+                for(let db of dbInstancias) {
+                    // Busca Nome da Empresa para o Cabeçalho
+                    try {
+                        const dEmp = await getDoc(doc(db, "config", "empresa"));
+                        if(dEmp.exists() && dEmp.data().nome) {
+                            document.getElementById('empresa-nome').innerText = dEmp.data().nome;
+                        }
+                    } catch(err) {}
+
+                    // 1. Tenta por ID do Documento
+                    try {
+                        const dOs = await getDoc(doc(db, "ordens_servicos", osParam));
+                        if(dOs.exists()) {
+                            osData = dOs.data();
+                            break;
+                        }
+                    } catch(err) {}
+
+                    // 2. Se não achou, tenta por número da OS
+                    if(!osData) {
+                        try {
+                            const q = query(collection(db, "ordens_servicos"), where("numero", "==", osParam));
+                            const qSnap = await getDocs(q);
+                            if(!qSnap.empty) {
+                                osData = qSnap.docs[0].data();
+                                break;
+                            }
+                        } catch(err) {}
+                    }
+                }
+
+                if(!osData) {
+                    document.getElementById('loading').innerHTML = "<i class='fa-solid fa-circle-xmark fa-2x' style='color:#ef4444;'></i><br><br><b>Ordem de Serviço não encontrada.</b><br>Verifique se o link está correto.";
+                    return;
+                }
+
+                // Renderização das informações
+                document.getElementById('os-titulo-tipo').innerText = osData.tipo === 'Orçamento' ? 'Acompanhamento do Orçamento' : 'Acompanhamento da OS';
+                document.getElementById('os-num').innerText = osData.numero || '-';
+                
+                let nomeCompleto = osData.cliente || "Cliente";
+                let partesNome = nomeCompleto.trim().split(" ");
+                let nomeMascarado = partesNome[0] + (partesNome.length > 1 ? " " + partesNome[partesNome.length - 1].substring(0,1) + "." : "");
+                document.getElementById('os-cli').innerText = nomeMascarado;
+                
+                document.getElementById('os-data').innerText = osData.dataSimples || '-';
+                document.getElementById('os-total').innerText = "R$ " + Number(osData.total || 0).toFixed(2);
+
+                const passos = ['Na Fila', 'Em Análise', 'Aguardando Peça', 'Pronto', 'Entregue'];
+                const statusAtual = osData.statusProducao || 'Na Fila';
+                
+                let timelineHTML = '';
+                let achouAtual = false;
+
+                passos.forEach(p => {
+                    let classeCSS = '';
+                    if(p === statusAtual) { 
+                        classeCSS = 'step active'; 
+                        achouAtual = true; 
+                    } else if (!achouAtual) { 
+                        classeCSS = 'step completed'; 
+                    } else { 
+                        classeCSS = 'step'; 
+                    }
+                    
+                    let legenda = p;
+                    if(p === 'Pronto') legenda = 'Pronto para Retirada';
+                    if(p === 'Entregue') legenda = 'Finalizado e Entregue';
+
+                    timelineHTML += `<div class="${classeCSS}">${legenda}</div>`;
+                });
+
+                document.getElementById('timeline').innerHTML = timelineHTML;
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('content').style.display = 'block';
+
+            } catch(e) {
+                document.getElementById('loading').innerHTML = "<i class='fa-solid fa-triangle-exclamation fa-2x' style='color:#ef4444;'></i><br><br>Erro ao carregar os dados. Verifique sua conexão.";
+                console.error(e);
+            }
+        }
+
+        carregarDados();
+    </script>
+</body>
+</html>
