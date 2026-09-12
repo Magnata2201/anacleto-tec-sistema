@@ -77,13 +77,16 @@
         const userInp = document.getElementById('username');
         const passInp = document.getElementById('password');
 
-        async function handleLogin() {
+async function handleLogin() {
             const user = userInp.value;
             const pass = passInp.value;
 
+            // Login do dono (Acesso Total Inquebrável)
             if (user === "admin" && pass === "1996") {
-                sessionStorage.setItem("auth", "true"); // Cria a sessão
-                window.location.replace("sistema.html"); // Substitui a url para bloquear o botão voltar
+                sessionStorage.setItem("auth", "true"); 
+                // Salva que este é o ADMIN supremo
+                sessionStorage.setItem("loggedUser", JSON.stringify({ role: "admin", username: "Admin Principal" }));
+                window.location.replace("sistema.html"); 
                 return;
             }
 
@@ -91,8 +94,13 @@
                 const q = query(collection(db, "usuarios"), where("username", "==", user), where("password", "==", pass));
                 const querySnapshot = await getDocs(q);
                 if (!querySnapshot.empty) {
-                    sessionStorage.setItem("auth", "true"); // Cria a sessão
-                    window.location.replace("sistema.html"); // Substitui a url para bloquear o botão voltar
+                    const userData = querySnapshot.docs[0].data(); // Pega os dados do usuário logado
+                    
+                    sessionStorage.setItem("auth", "true"); 
+                    // Salva as permissões do usuário logado
+                    sessionStorage.setItem("loggedUser", JSON.stringify(userData)); 
+                    
+                    window.location.replace("sistema.html"); 
                 } else {
                     alert("Usuário ou senha inválidos!");
                 }
@@ -101,7 +109,6 @@
                 alert("Erro na conexão com o banco de dados.");
             }
         }
-
         loginBtn.addEventListener('click', handleLogin);
         document.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleLogin(); });
     </script>
